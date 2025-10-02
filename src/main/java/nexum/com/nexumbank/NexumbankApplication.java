@@ -1,0 +1,13 @@
+package nexum.com.nexumbank;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class NexumbankApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(NexumbankApplication.class, args);
+	}
+
+}
