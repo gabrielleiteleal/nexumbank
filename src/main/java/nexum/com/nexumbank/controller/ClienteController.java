@@ -1,13 +1,11 @@
 package nexum.com.nexumbank.controller;
 
 import lombok.AllArgsConstructor;
+import nexum.com.nexumbank.dto.cliente.ClienteResponseDTO;
 import nexum.com.nexumbank.model.Cliente;
 import nexum.com.nexumbank.service.ClienteService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,13 +17,14 @@ public class ClienteController {
     private ClienteService clienteService;
 
     @GetMapping
-    public ResponseEntity<List<Cliente>> listarClientes() {
+    public ResponseEntity<List<ClienteResponseDTO>> listarClientes() {
         return ResponseEntity.status(200).body(clienteService.listarClientes());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Cliente> buscarCliente(@PathVariable Long id){
+    public ResponseEntity<ClienteResponseDTO> buscarCliente(@PathVariable Long id){
         return ResponseEntity.status(200).body(clienteService.buscarCliente(id));
     }
+
 
 }

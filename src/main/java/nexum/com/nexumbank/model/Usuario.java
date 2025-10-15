@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import nexum.com.nexumbank.dto.UsuarioRequestDTO;
+import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
+import nexum.com.nexumbank.model.enums.Estado;
 import nexum.com.nexumbank.model.enums.TipoUsuario;
 
 import java.time.LocalDate;
@@ -54,6 +55,9 @@ public class Usuario {
     @Column(name = "endereco")
     private String endereco;
 
+    @Column(name = "estado", length = 2)
+    private Estado estado;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_usuario", nullable = false, length = 20)
@@ -80,6 +84,7 @@ public class Usuario {
         this.senha = usuarioRequestDTO.senha();
         this.telefone = usuarioRequestDTO.telefone();
         this.endereco = usuarioRequestDTO.endereco();
+        this.estado = usuarioRequestDTO.estado() != null ? Estado.valueOf(usuarioRequestDTO.estado().toUpperCase()) : null;
         this.tipoUsuario = TipoUsuario.valueOf(usuarioRequestDTO.tipo_usuario().toUpperCase());
         this.dataNascimento = LocalDate.parse(usuarioRequestDTO.data_nascimento(), DateTimeFormatter.ofPattern("dd/MM/yyy"));
     }

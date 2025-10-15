@@ -24,8 +24,12 @@ public class Conta {
     @Column(name = "numero_conta", nullable = false, unique = true)
     private String numeroConta;
 
+    @NotNull
+    @Column(name = "agencia", nullable = false)
+    private String agencia;
+
     @Column(name = "saldo", nullable = false)
-    private Double saldo;
+    private Double saldo = 0.0;
 
     @OneToOne
     @JoinColumn(name = "id_cliente", nullable = false)
@@ -35,6 +39,6 @@ public class Conta {
     private StatusConta statusConta;
 
     @Column(name = "data_criacao", nullable = false, updatable = false)
-    private LocalDateTime dataCriacao;
+    private LocalDateTime dataCriacao = LocalDateTime.now();
 
 }

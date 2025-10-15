@@ -24,7 +24,9 @@ public class Cliente {
     @JoinColumn(name = "id_cliente")
     private Usuario usuario;
 
-    @NotNull
-    @Column(name = "saldo", nullable = false)
-    private Double saldo = 0.0;
+    @Column(name = "profissao", length = 100)
+    private String profissao;
+
+    @Column(name = "renda_mensal")
+    private Double rendaMensal;
 }

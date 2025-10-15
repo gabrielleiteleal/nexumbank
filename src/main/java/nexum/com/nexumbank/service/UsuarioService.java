@@ -2,8 +2,8 @@ package nexum.com.nexumbank.service;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import nexum.com.nexumbank.dto.UsuarioRequestDTO;
-import nexum.com.nexumbank.dto.UsuarioResponseDTO;
+import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
+import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
 import nexum.com.nexumbank.exception.CpfCnpjJaCadastrado;
 import nexum.com.nexumbank.exception.EmailJaCadastrado;
 import nexum.com.nexumbank.exception.SenhaIncorreta;
@@ -34,16 +34,31 @@ public class UsuarioService {
         return toDTO(usuario);
     }
 
-    public Usuario criarUsuario(UsuarioRequestDTO usuarioRequestDTO) {
+    public UsuarioResponseDTO criarUsuario(UsuarioRequestDTO usuarioRequestDTO, String profissao, Double rendaMensal) {
         Usuario usuario = toEntity(usuarioRequestDTO);
         if (validarCpfEmail(usuario)) {
             System.out.println("CPF/CNPJ e E-mail válidos");
         }
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         if (usuario.getTipoUsuario() == TipoUsuario.CLIENTE) {
-            clienteService.criarCliente(usuario);
+            clienteService.criarCliente(usuario, profissao, rendaMensal);
+            //TODO identificar como será salvo a profissão e renda mensal (OUTRO ENDPOINT)
         }
-        return repository.save(usuario);
+        //TODO fazer o mesmo para o tipo GERENTE quando criar a entidade Gerente
+
+
+        repository.save(usuario);
+        return toDTO(usuario);
+    }
+
+    public UsuarioResponseDTO editarUsuario(Long id, UsuarioRequestDTO usuarioRequestDTO) {
+        Usuario usuario = repository.findById(id).orElseThrow(() -> new UsuarioNaoEncontrado("Usuário não encontrado. Id: " + id));
+        usuario.setNome(usuarioRequestDTO.nome());
+        usuario.setTelefone(usuarioRequestDTO.telefone());
+        usuario.setEndereco(usuarioRequestDTO.endereco());
+
+        repository.save(usuario);
+        return toDTO(usuario);
     }
 
     public Boolean deletarUsuario(Long id) {
@@ -51,12 +66,13 @@ public class UsuarioService {
         return true;
     }
 
+    //TODO verificar lógica
     private Usuario toEntity(UsuarioRequestDTO usuarioRequestDTO) {
         return new Usuario(usuarioRequestDTO);
     }
 
     private UsuarioResponseDTO toDTO(Usuario usuario) {
-        return new UsuarioResponseDTO(usuario.getNome(), usuario.getCpfCnpj(), usuario.getEmail(), usuario.getTelefone(), usuario.getEndereco(), usuario.getTipoUsuario().toString(), usuario.getDataNascimento().toString());
+        return new UsuarioResponseDTO(usuario.getIdUsuario().toString(), usuario.getNome(), usuario.getCpfCnpj(), usuario.getEmail(), usuario.getTelefone(), usuario.getEndereco(), usuario.getEstado().toString(), usuario.getTipoUsuario().toString(), usuario.getDataNascimento().toString());
     }
 
     private Boolean validarCpfEmail(Usuario usuario) {
@@ -79,7 +95,7 @@ public class UsuarioService {
     private Boolean validarSenha(Usuario usuario) {
 
         Usuario usuarioBanco = repository.findById(usuario.getIdUsuario()).orElseThrow(() -> new UsuarioNaoEncontrado("Usuário não encontrado. Id: " + usuario.getIdUsuario()));
-        if(!(passwordEncoder.matches(usuarioBanco.getSenha(), usuario.getSenha()))){
+        if (!(passwordEncoder.matches(usuarioBanco.getSenha(), usuario.getSenha()))) {
             throw new SenhaIncorreta("Senha incorreta");
         }
         return true;

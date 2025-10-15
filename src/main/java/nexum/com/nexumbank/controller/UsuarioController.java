@@ -1,8 +1,7 @@
 package nexum.com.nexumbank.controller;
 
-import nexum.com.nexumbank.dto.UsuarioRequestDTO;
-import nexum.com.nexumbank.dto.UsuarioResponseDTO;
-import nexum.com.nexumbank.model.Usuario;
+import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
+import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
 import nexum.com.nexumbank.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -23,24 +22,23 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> buscarUsuario(@PathVariable Long id){
+    public ResponseEntity<UsuarioResponseDTO> buscarUsuario(@PathVariable Long id) {
         return ResponseEntity.status(200).body(usuarioService.buscarUsuario(id));
     }
 
     @PostMapping
-    public ResponseEntity<Usuario> criarUsuario(@RequestBody UsuarioRequestDTO usuarioRequestDTO){
-        return ResponseEntity.status(201).body(usuarioService.criarUsuario(usuarioRequestDTO));
+    public ResponseEntity<UsuarioResponseDTO> criarUsuario(@RequestBody UsuarioRequestDTO usuarioRequestDTO, String profissao, Double rendaMensal) {
+        return ResponseEntity.status(201).body(usuarioService.criarUsuario(usuarioRequestDTO, profissao, rendaMensal));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioResponseDTO> editarUsuario(@PathVariable Long id, @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
+        return ResponseEntity.status(201).body(usuarioService.editarUsuario(id, usuarioRequestDTO));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Boolean> deletarUsuario(@PathVariable Long id){
+    public ResponseEntity<Boolean> deletarUsuario(@PathVariable Long id) {
         return ResponseEntity.status(204).body(usuarioService.deletarUsuario(id));
     }
-
-    //TODO método de teste para ver se está chegando o JSON corretamente
-//    @PostMapping
-//    public void printarUsuario(@RequestBody UsuarioRequestDTO usuarioRequestDTO){
-//        System.out.println(usuarioRequestDTO);
-//    }
 
 }
