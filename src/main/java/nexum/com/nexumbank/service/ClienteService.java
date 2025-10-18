@@ -2,6 +2,7 @@ package nexum.com.nexumbank.service;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import nexum.com.nexumbank.dto.cliente.ClienteProfissaoERenda;
 import nexum.com.nexumbank.dto.cliente.ClienteResponseDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
 import nexum.com.nexumbank.exception.ClienteNaoEncontrado;
@@ -31,13 +32,23 @@ public class ClienteService {
         return toDTO(cliente);
     }
 
-    public void criarCliente(Usuario usuario, String profissao, Double rendaMensal) {
+    public void criarCliente(Usuario usuario) {
         Cliente cliente = new Cliente();
         cliente.setUsuario(usuario);
-        cliente.setProfissao(profissao);
-        cliente.setRendaMensal(rendaMensal);
         repository.save(cliente);
         contaService.criarConta(cliente);
+    }
+
+    public void deletarCliente(Long id) {
+        contaService.deletarConta(id);
+        repository.deleteById(id);
+    }
+
+    public void adicionarProfissaoERenda(ClienteProfissaoERenda clienteProfissaoERenda) {
+        Cliente cliente = repository.findById(clienteProfissaoERenda.id_cliente()).orElseThrow(() -> new ClienteNaoEncontrado("Cliente não encontrado. Id: " + clienteProfissaoERenda.id_cliente()));
+        cliente.setProfissao(clienteProfissaoERenda.profissao());
+        cliente.setRendaMensal(clienteProfissaoERenda.renda_mensal());
+        repository.save(cliente);
     }
 
     private UsuarioResponseDTO usuarioToDTO(Usuario usuario) {

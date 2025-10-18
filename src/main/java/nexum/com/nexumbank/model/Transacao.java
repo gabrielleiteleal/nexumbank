@@ -23,14 +23,14 @@ public class Transacao {
 
     @NotNull
     @Column(name = "valor", nullable = false)
-    private Double valor;
+    private Double valor = 0.0;
 
     @ManyToOne
-    @JoinColumn(name = "id_conta_origem", nullable = false)
+    @JoinColumn(name = "conta_origem", nullable = false)
     private Conta contaOrigem;
 
     @ManyToOne
-    @JoinColumn(name = "id_conta_destino", nullable = false)
+    @JoinColumn(name = "conta_destino", nullable = false)
     private Conta contaDestino;
 
     @Column(name = "data_hora", nullable = false)

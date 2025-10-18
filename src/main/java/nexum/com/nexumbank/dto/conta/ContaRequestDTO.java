@@ -1,4 +1,4 @@
 package nexum.com.nexumbank.dto.conta;
 
-public record ContaRequestDTO(Long id_cliente, String saldo) {
+public record ContaRequestDTO(Long id_cliente, Double saldo) {
 }

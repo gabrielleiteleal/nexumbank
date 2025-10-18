@@ -1,11 +1,8 @@
 package nexum.com.nexumbank.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
-import java.time.LocalDate;
 
 @Entity
 //@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
@@ -19,10 +16,13 @@ public class Cliente {
     @Column(name = "id_cliente", nullable = false)
     private Long idCliente;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @MapsId
     @JoinColumn(name = "id_cliente")
     private Usuario usuario;
+
+    @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL)
+    private Conta conta;
 
     @Column(name = "profissao", length = 100)
     private String profissao;

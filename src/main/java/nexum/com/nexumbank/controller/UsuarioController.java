@@ -27,8 +27,8 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioResponseDTO> criarUsuario(@RequestBody UsuarioRequestDTO usuarioRequestDTO, String profissao, Double rendaMensal) {
-        return ResponseEntity.status(201).body(usuarioService.criarUsuario(usuarioRequestDTO, profissao, rendaMensal));
+    public ResponseEntity<UsuarioResponseDTO> criarUsuario(@RequestBody UsuarioRequestDTO usuarioRequestDTO) {
+        return ResponseEntity.status(201).body(usuarioService.criarUsuario(usuarioRequestDTO));
     }
 
     @PutMapping("/{id}")

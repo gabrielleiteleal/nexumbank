@@ -34,14 +34,14 @@ public class UsuarioService {
         return toDTO(usuario);
     }
 
-    public UsuarioResponseDTO criarUsuario(UsuarioRequestDTO usuarioRequestDTO, String profissao, Double rendaMensal) {
+    public UsuarioResponseDTO criarUsuario(UsuarioRequestDTO usuarioRequestDTO) {
         Usuario usuario = toEntity(usuarioRequestDTO);
         if (validarCpfEmail(usuario)) {
             System.out.println("CPF/CNPJ e E-mail válidos");
         }
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         if (usuario.getTipoUsuario() == TipoUsuario.CLIENTE) {
-            clienteService.criarCliente(usuario, profissao, rendaMensal);
+            clienteService.criarCliente(usuario);
             //TODO identificar como será salvo a profissão e renda mensal (OUTRO ENDPOINT)
         }
         //TODO fazer o mesmo para o tipo GERENTE quando criar a entidade Gerente

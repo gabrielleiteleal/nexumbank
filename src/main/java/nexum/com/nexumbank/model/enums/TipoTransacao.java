@@ -1,6 +1,5 @@
 package nexum.com.nexumbank.model.enums;
 
 public enum TipoTransacao {
-    ENTRADA,
-    SAIDA
+    PIX, TRANSFERENCIA, DEPOSITO, SAQUE, BOLETO
 }

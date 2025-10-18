@@ -1,12 +1,11 @@
 package nexum.com.nexumbank.controller;
 
 import lombok.AllArgsConstructor;
+import nexum.com.nexumbank.dto.conta.ContaRequestDTO;
 import nexum.com.nexumbank.dto.conta.ContaResponseDTO;
 import nexum.com.nexumbank.service.ContaService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -23,8 +22,18 @@ public class ContaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ContaResponseDTO> buscarConta(Long id) {
+    public ResponseEntity<ContaResponseDTO> buscarConta(@PathVariable Long id) {
         return ResponseEntity.status(200).body(contaService.buscarConta(id));
+    }
+
+    @PostMapping("/depositar")
+    public ResponseEntity<Boolean> depositarDinheiro(@RequestBody ContaRequestDTO contaRequestDTO){
+        return ResponseEntity.status(201).body(contaService.depositarDinheiro(contaRequestDTO));
+    }
+
+    @PostMapping("/sacar")
+    public ResponseEntity<Boolean> sacarDinheiro(@RequestBody ContaRequestDTO contaRequestDTO){
+        return ResponseEntity.status(200).body(contaService.depositarDinheiro(contaRequestDTO));
     }
 
 
