@@ -71,8 +71,6 @@ public class Usuario {
     @Column(name = "data_cadastro", nullable = false)
     private LocalDateTime dataCadastro = LocalDateTime.now();
 
-    //Relacionamento 1:1 com Cliente
-
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
     @JsonIgnore
     private Cliente cliente;
@@ -86,6 +84,6 @@ public class Usuario {
         this.endereco = usuarioRequestDTO.endereco();
         this.estado = usuarioRequestDTO.estado() != null ? Estado.valueOf(usuarioRequestDTO.estado().toUpperCase()) : null;
         this.tipoUsuario = TipoUsuario.valueOf(usuarioRequestDTO.tipo_usuario().toUpperCase());
-        this.dataNascimento = LocalDate.parse(usuarioRequestDTO.data_nascimento(), DateTimeFormatter.ofPattern("dd/MM/yyy"));
+        this.dataNascimento = LocalDate.parse(usuarioRequestDTO.data_nascimento(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     }
 }

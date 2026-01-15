@@ -1,5 +1,7 @@
 package nexum.com.nexumbank.controller;
 
+import nexum.com.nexumbank.dto.usuario.UsuarioLoginRequestDTO;
+import nexum.com.nexumbank.dto.usuario.UsuarioLoginResponseDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
 import nexum.com.nexumbank.service.UsuarioService;
@@ -39,6 +41,11 @@ public class UsuarioController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Boolean> deletarUsuario(@PathVariable Long id) {
         return ResponseEntity.status(204).body(usuarioService.deletarUsuario(id));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UsuarioLoginResponseDTO> login(@RequestBody UsuarioLoginRequestDTO loginRequest) {
+        return ResponseEntity.status(200).body(usuarioService.login(loginRequest));
     }
 
 }

@@ -2,6 +2,8 @@ package nexum.com.nexumbank.service;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import nexum.com.nexumbank.dto.usuario.UsuarioLoginRequestDTO;
+import nexum.com.nexumbank.dto.usuario.UsuarioLoginResponseDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
 import nexum.com.nexumbank.exception.CpfCnpjJaCadastrado;
@@ -100,6 +102,38 @@ public class UsuarioService {
         }
         return true;
 
+    }
+
+    public UsuarioLoginResponseDTO login(UsuarioLoginRequestDTO loginRequest) {
+        // Buscar usuário por CPF/CNPJ
+        Usuario usuario = repository.findByCpfCnpj(loginRequest.cpf_cnpj())
+                .orElseThrow(() -> new UsuarioNaoEncontrado("CPF/CNPJ não encontrado no sistema"));
+
+        // Validar senha
+        if (!passwordEncoder.matches(loginRequest.senha(), usuario.getSenha())) {
+            throw new SenhaIncorreta("Senha incorreta");
+        }
+
+        // Se o usuário é CLIENTE, buscar informações da conta
+        Long idCliente = null;
+        Long idConta = null;
+
+        if (usuario.getTipoUsuario() == TipoUsuario.CLIENTE && usuario.getCliente() != null) {
+            idCliente = usuario.getCliente().getIdCliente();
+            if (usuario.getCliente().getConta() != null) {
+                idConta = usuario.getCliente().getConta().getIdConta();
+            }
+        }
+
+        return new UsuarioLoginResponseDTO(
+                usuario.getIdUsuario().toString(),
+                usuario.getNome(),
+                usuario.getCpfCnpj(),
+                usuario.getEmail(),
+                usuario.getTipoUsuario().toString(),
+                idCliente,
+                idConta
+        );
     }
 
 }
