@@ -1,0 +1,82 @@
+package nexum.com.nexumbank.repository;
+
+import jakarta.persistence.EntityManager;
+import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
+import nexum.com.nexumbank.model.Cliente;
+import nexum.com.nexumbank.model.Conta;
+import nexum.com.nexumbank.model.Usuario;
+import nexum.com.nexumbank.model.enums.StatusConta;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+
+@DataJpaTest
+@ActiveProfiles("test")
+class IContaTest {
+
+    @Autowired
+    private IConta iConta;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Test
+    @DisplayName("Should return true when account number exists")
+    void existsByNumeroContaCase1() {
+
+        UsuarioRequestDTO usuarioDTO = new UsuarioRequestDTO("Gabriel Leal", "123.456.789-00", "gabriel@email.com", "senha123", "11999999999", "Rua A, 123", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
+        Usuario usuario = createUsuario(usuarioDTO);
+        Cliente cliente = createCliente(usuario);
+        Conta conta = createConta(cliente);
+
+        Boolean foundedAccount = this.iConta.existsByNumeroConta(conta.getNumeroConta());
+
+        assertThat(foundedAccount).isTrue();
+
+    }
+
+    @Test
+    @DisplayName("Should return false when account number not exists")
+    void existsByNumeroContaCase2() {
+
+        UsuarioRequestDTO usuarioDTO = new UsuarioRequestDTO("Gabriel Leal", "123.456.789-00", "gabriel@email.com", "senha123", "11999999999", "Rua A, 123", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
+        Usuario usuario = createUsuario(usuarioDTO);
+        Cliente cliente = createCliente(usuario);
+        Conta conta = createConta(cliente);
+
+        String inexistentNumber = "654321";
+
+        Boolean foundedAccount = this.iConta.existsByNumeroConta(inexistentNumber);
+
+        assertThat(foundedAccount).isFalse();
+
+    }
+
+    private Usuario createUsuario(UsuarioRequestDTO usuarioRequestDTO) {
+        Usuario usuario = new Usuario(usuarioRequestDTO);
+        this.entityManager.persist(usuario);
+        return usuario;
+    }
+
+    private Cliente createCliente(Usuario usuario) {
+        Cliente cliente = new Cliente();
+        cliente.setUsuario(usuario);
+        this.entityManager.persist(cliente);
+        return cliente;
+    }
+
+    private Conta createConta(Cliente cliente) {
+        Conta conta = new Conta();
+        conta.setNumeroConta("123456");
+        conta.setAgencia(cliente.getUsuario().getEstado().getNumeroEstado());
+        conta.setCliente(cliente);
+        conta.setStatusConta(StatusConta.Ativo);
+        this.entityManager.persist(conta);
+        return conta;
+    }
+}

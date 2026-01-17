@@ -105,16 +105,13 @@ public class UsuarioService {
     }
 
     public UsuarioLoginResponseDTO login(UsuarioLoginRequestDTO loginRequest) {
-        // Buscar usuário por CPF/CNPJ
         Usuario usuario = repository.findByCpfCnpj(loginRequest.cpf_cnpj())
                 .orElseThrow(() -> new UsuarioNaoEncontrado("CPF/CNPJ não encontrado no sistema"));
 
-        // Validar senha
         if (!passwordEncoder.matches(loginRequest.senha(), usuario.getSenha())) {
             throw new SenhaIncorreta("Senha incorreta");
         }
 
-        // Se o usuário é CLIENTE, buscar informações da conta
         Long idCliente = null;
         Long idConta = null;
 
