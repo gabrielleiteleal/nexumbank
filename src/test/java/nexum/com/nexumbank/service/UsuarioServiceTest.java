@@ -1,24 +1,25 @@
 package nexum.com.nexumbank.service;
 
-import jakarta.persistence.EntityManager;
 import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
+import nexum.com.nexumbank.exception.CpfCnpjJaCadastrado;
 import nexum.com.nexumbank.model.Usuario;
 import nexum.com.nexumbank.repository.IUsuario;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.assertj.core.api.Assertions.anyOf;
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -32,81 +33,129 @@ class UsuarioServiceTest {
     private IUsuario repository;
 
     @Mock
-    private ClienteService clienteService;
+    private PasswordEncoder passwordEncoder;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private ClienteService clienteService;
 
     @InjectMocks
     private UsuarioService usuarioService;
 
+    private UsuarioRequestDTO usuarioRequestDTO;
 
-    @Test
-    @DisplayName("Should create a new user successfully")
-    void criarUsuarioCase1() {
-        //Arrange
-        Usuario usuario = new Usuario();
-//        usuario.setIdUsuario(1L);
-//        when(repository.save(any())).thenReturn(usuario);
-        when(repository.save(any())).thenAnswer(invocation -> {
-           Usuario u = invocation.getArgument(0);
-           u.setIdUsuario(1L);
-           return u;
-        });
+    @Captor
+    private ArgumentCaptor<Usuario> userArgumentCapturer;
 
-        when(passwordEncoder.encode(any())).thenReturn("senhaCriptografada");
-        UsuarioRequestDTO request = new UsuarioRequestDTO("Gabriel Leal", "094.157.194-78", "gabriel@email.com", "senha123", "11999999999", "Rua A, 123", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
-
-        //Act
-        var output = usuarioService.criarUsuario(request);
-
-        //Assert
-        assertNotNull(output);
-        verify(repository).save(any());
+    @BeforeEach
+    void init() {
+        usuarioRequestDTO = new UsuarioRequestDTO("Gabriel Leal", "123.456.789-00", "gabriel@email.com", "11999999999", "senha123", "Rua A, 123", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
     }
 
-    @Test
-    @DisplayName("Should don't create a new user if CPF or Email already exists")
-    void criarUsuarioCase2() {
+    @Nested
+    class createUserTests {
+        @Test
+        @DisplayName("Should create a new user successfully")
+        void shouldCreateNewUser1() {
+            //Arrange
+            Usuario usuario = new Usuario(usuarioRequestDTO);
 
-        //Arrange
-        Usuario usuario = new Usuario();
-        when(repository.save(any())).thenAnswer(invocation -> {
-            Usuario u = invocation.getArgument(0);
-            u.setIdUsuario(1L);
-            return u;
-        });
-        usuario.setCpfCnpj("094.157.194-78");
-        usuario.setEmail("gabriel@email.com");
+            when(passwordEncoder.encode(any())).thenReturn("senhaCriptografada");
+            when(repository.save(any())).thenAnswer(invocation -> {
+                Usuario u = invocation.getArgument(0);
+                u.setIdUsuario(1L);
+                return u;
+            });
 
-        when(passwordEncoder.encode(any())).thenReturn("senhaCriptografada");
-        UsuarioRequestDTO request = new UsuarioRequestDTO("Gabriel Leal", "094.157.194-78", "gabriel@email.com", "senha123", "11999999999", "Rua A, 123", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
+            //Act
+            var output = usuarioService.criarUsuario(usuarioRequestDTO);
 
-        //Act
-        var output = usuarioService.criarUsuario(request);
+            //Assert
+            verify(repository).save(userArgumentCapturer.capture());
+            Usuario userCaptured = userArgumentCapturer.getValue();
 
-        //Assert
-        assertEquals(output.cpf_cnpj(), usuario.getCpfCnpj());
-        assertEquals(output.email(), usuario.getEmail());
+            assertNotNull(output);
+            assertEquals("senhaCriptografada", userCaptured.getSenha());
+            assertEquals(usuario.getCpfCnpj(), userCaptured.getCpfCnpj());
+        }
+
+        @Test
+        @DisplayName("Should throw UserExcpetion if CPF or Email already exists")
+        void shouldThrowUserException() {
+            //Arrange
+//            Usuario usuario = new Usuario(usuarioRequestDTO);
+
+            doReturn(true).when(usuarioService.criarUsuario(usuarioRequestDTO));
+
+            when(repository.existsByCpfCnpj(any())).thenReturn(true);
+
+            var exception = assertThrows(CpfCnpjJaCadastrado.class, () -> {
+                usuarioService.criarUsuario(usuarioRequestDTO);
+            });
+
+
+            assertTrue(exception.getMessage().contains("CPF/CNPJ já cadastrado no sistema"));
+
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("Should create a new user successfully 2")
+        void shouldCreateNewUser2() {
+
+            when(passwordEncoder.encode(any())).thenReturn("SenhaCriptografada");
+
+            when(repository.save(any())).thenAnswer(invocation -> {
+                Usuario u = invocation.getArgument(0);
+                u.setIdUsuario(1L);
+                return u;
+            });
+
+            var output = usuarioService.criarUsuario(usuarioRequestDTO);
+
+            assertNotNull(output);
+            verify(repository).save(any());
+
+        }
+
+
     }
 
+    @Nested
+    class editUserTests {
+        @Test
+        @DisplayName("Should edit user successfully")
+        void shouldEditUserSuccessfully() {
+            Usuario usuarioExistente = new Usuario(usuarioRequestDTO);
+            usuarioExistente.setIdUsuario(1L);
+            usuarioExistente.setNome("Gabriel Leal");
+            usuarioExistente.setTelefone("1111111111");
+            usuarioExistente.setEndereco("Antigo endereço");
 
-//    @Test
-//    @DisplayName("Should create a new user successfully")
-//    void criarUsuarioCase1() {
-//
-//        //Arrange
-//        UsuarioRequestDTO request = new UsuarioRequestDTO("Gabriel Leal", "094.157.194-78", "gabriel@email.com", "senha123", "11999999999", "Rua A, 123", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
-//        //Act
-//        UsuarioResponseDTO response = usuarioService.criarUsuario(request);
-//        entityManager.persist(response);
-//        //Assert
-//        assertThat(response.cpf_cnpj()).isNotEmpty();
-//
-//        //Arrange
-//        //Act
-//        //Assert
-//
-//    }
+            UsuarioRequestDTO usuarioEditado = new UsuarioRequestDTO("João Lucas", "123.456.789-00", "gabriel@email.com", "123123123", "senha123", "Novo Endereço", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
+
+            when(repository.findById(1L)).thenReturn(Optional.of(usuarioExistente));
+
+            when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+            UsuarioResponseDTO response = usuarioService.editarUsuario(1L, usuarioEditado);
+
+            assertNotNull(response);
+            assertEquals("João Lucas", response.nome());
+            assertEquals("123123123", response.telefone());
+            assertEquals("Novo Endereço", response.endereco());
+
+            ArgumentCaptor<Usuario> argumentCaptor = ArgumentCaptor.forClass(Usuario.class);
+            verify(repository).save(argumentCaptor.capture());
+
+            Usuario usuarioSalvo = argumentCaptor.getValue();
+
+            assertEquals("João Lucas", usuarioSalvo.getNome());
+            assertEquals("123123123", usuarioSalvo.getTelefone());
+            assertEquals("Novo Endereço", usuarioSalvo.getEndereco());
+
+//        verify(repository).save(any());
+        }
+    }
+
 
 }
