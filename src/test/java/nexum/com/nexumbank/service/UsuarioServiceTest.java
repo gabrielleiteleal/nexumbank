@@ -3,6 +3,8 @@ package nexum.com.nexumbank.service;
 import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
 import nexum.com.nexumbank.exception.CpfCnpjJaCadastrado;
+import nexum.com.nexumbank.exception.EmailJaCadastrado;
+import nexum.com.nexumbank.exception.UsuarioNaoEncontrado;
 import nexum.com.nexumbank.model.Usuario;
 import nexum.com.nexumbank.repository.IUsuario;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,16 +49,108 @@ class UsuarioServiceTest {
     @Captor
     private ArgumentCaptor<Usuario> userArgumentCapturer;
 
+    @Captor
+    private ArgumentCaptor<Long> userIdArgumentCapturer;
+
+    @Captor
+    private ArgumentCaptor<String> userStringArgumentCapturer;
+
     @BeforeEach
     void init() {
-        usuarioRequestDTO = new UsuarioRequestDTO("Gabriel Leal", "123.456.789-00", "gabriel@email.com", "11999999999", "senha123", "Rua A, 123", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
+        usuarioRequestDTO = new UsuarioRequestDTO("Gabriel Leal",
+                "123.456.789-00",
+                "gabriel@email.com",
+                "11999999999",
+                "senha123",
+                "Rua A, 123",
+                "SP",
+                "CLIENTE",
+                "07/11/2004",
+                "Programador",
+                5.000);
+    }
+
+    @Nested
+    class listUsersTest {
+        @Test
+        @DisplayName("Should return all list users successfully")
+        void shouldListAllUsersSuccessfully() {
+
+            //Arrange
+            Usuario usuario = new Usuario(usuarioRequestDTO);
+            usuario.setIdUsuario(1L);
+
+            //Act
+            doReturn(List.of(usuario)).when(repository).findAll();
+
+            //Assert
+            var output = usuarioService.listarUsuarios();
+
+            assertNotNull(output);
+            assertEquals(1, output.size());
+
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no users found")
+        void shouldReturnEmptyListWhenNoUsersFound() {
+
+            //Act
+            doReturn(List.of()).when(repository).findAll();
+
+            //Assert
+            var output = usuarioService.listarUsuarios();
+
+            assertNotNull(output);
+            assertTrue(output.isEmpty());
+        }
+    }
+
+    @Nested
+    class findUserByIdTests {
+        @Test
+        @DisplayName("Should find user by ID successfully")
+        void shouldFindUserByIdSuccessfully() {
+
+            //Arrange
+            Usuario usuario = new Usuario(usuarioRequestDTO);
+            usuario.setIdUsuario(1L);
+
+            when(repository.findById(usuario.getIdUsuario())).thenReturn(Optional.of(usuario));
+
+            //Act
+            var output = usuarioService.buscarUsuario(usuario.getIdUsuario());
+
+            //Assert
+            assertNotNull(output);
+            assertEquals(1L, usuario.getIdUsuario());
+
+        }
+
+        @Test
+        @DisplayName("Should throw exception when user not found")
+        void shouldThrowExceptionWhenUserNotFound() {
+
+            //Arrange
+
+            Long userId = 999L;
+            when(repository.findById(userId)).thenReturn(Optional.empty());
+
+            //Act
+            UsuarioNaoEncontrado exception = assertThrows(UsuarioNaoEncontrado.class,
+                    () -> usuarioService.buscarUsuario(userId));
+
+            //Assert
+            assertEquals("Usuário não encontrado. Id: " + userId, exception.getMessage());
+
+        }
     }
 
     @Nested
     class createUserTests {
         @Test
         @DisplayName("Should create a new user successfully")
-        void shouldCreateNewUser1() {
+        void shouldCreateNewUserSuccessfully() {
             //Arrange
             Usuario usuario = new Usuario(usuarioRequestDTO);
 
@@ -79,25 +174,48 @@ class UsuarioServiceTest {
         }
 
         @Test
-        @DisplayName("Should throw UserExcpetion if CPF or Email already exists")
-        void shouldThrowUserException() {
-            //Arrange
-//            Usuario usuario = new Usuario(usuarioRequestDTO);
+        @DisplayName("Should throw exception if CPF already exists")
+        void shouldThrowExceptionIfCpfAlreadyExists() {
 
-            doReturn(true).when(usuarioService.criarUsuario(usuarioRequestDTO));
+            Usuario usuario = new Usuario(usuarioRequestDTO);
 
-            when(repository.existsByCpfCnpj(any())).thenReturn(true);
+            doReturn(true).when(repository).existsByCpfCnpj(userStringArgumentCapturer.capture());
 
-            var exception = assertThrows(CpfCnpjJaCadastrado.class, () -> {
-                usuarioService.criarUsuario(usuarioRequestDTO);
-            });
+            CpfCnpjJaCadastrado exception = assertThrows(CpfCnpjJaCadastrado.class,
+                    () -> usuarioService.criarUsuario(usuarioRequestDTO));
 
+            var userStringCaptured = userStringArgumentCapturer.getValue();
 
-            assertTrue(exception.getMessage().contains("CPF/CNPJ já cadastrado no sistema"));
+            assertEquals("CPF/CNPJ já cadastrado no sistema", exception.getMessage());
+            assertEquals(usuario.getCpfCnpj(), userStringCaptured);
 
             verify(repository, never()).save(any());
+            verify(repository).existsByCpfCnpj(userStringCaptured);
+
         }
 
+        @Test
+        @DisplayName("Should throw exception if email already exists")
+        void shouldThrowExceptionIfEmailAlreadyExists() {
+
+            Usuario usuario = new Usuario(usuarioRequestDTO);
+
+            doReturn(true).when(repository).existsByEmail(userStringArgumentCapturer.capture());
+
+            EmailJaCadastrado exception = assertThrows(EmailJaCadastrado.class,
+                    () -> usuarioService.criarUsuario(usuarioRequestDTO));
+
+            var userStringCaptured = userStringArgumentCapturer.getValue();
+
+            assertEquals("E-mail já cadastrado no sistema", exception.getMessage());
+            assertEquals(usuario.getEmail(), userStringCaptured);
+
+            verify(repository, never()).save(any());
+            verify(repository).existsByEmail(userStringCaptured);
+
+        }
+
+        //TODO delete this
         @Test
         @DisplayName("Should create a new user successfully 2")
         void shouldCreateNewUser2() {
@@ -116,8 +234,6 @@ class UsuarioServiceTest {
             verify(repository).save(any());
 
         }
-
-
     }
 
     @Nested
@@ -153,7 +269,43 @@ class UsuarioServiceTest {
             assertEquals("123123123", usuarioSalvo.getTelefone());
             assertEquals("Novo Endereço", usuarioSalvo.getEndereco());
 
-//        verify(repository).save(any());
+        }
+    }
+
+    @Nested
+    class deleteUserTests {
+
+        @Test
+        @DisplayName("Should delete user successfully")
+        void shouldDeleteUserSuccessfully() {
+
+            var userId = 1L;
+
+            doNothing().when(repository).deleteById(userIdArgumentCapturer.capture());
+
+            var result = usuarioService.deletarUsuario(userId);
+
+            var idCaputred = userIdArgumentCapturer.getValue();
+
+            assertTrue(true, result.toString());
+            assertEquals(userId, idCaputred);
+
+        }
+
+        @Test
+        @DisplayName("Should throw exception when deleting non-existent user")
+        void shouldThrowExceptionWhenDeletingNonExistentUser() {
+
+            var userId = 999L;
+
+            doNothing().when(repository).deleteById(userIdArgumentCapturer.capture());
+
+            var result = usuarioService.deletarUsuario(userId);
+
+            var idCaputred = userIdArgumentCapturer.getValue();
+
+            assertTrue(result);
+            assertEquals(userId, idCaputred);
         }
     }
 

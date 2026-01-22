@@ -77,7 +77,7 @@ public class UsuarioService {
         return new UsuarioResponseDTO(usuario.getIdUsuario().toString(), usuario.getNome(), usuario.getCpfCnpj(), usuario.getEmail(), usuario.getTelefone(), usuario.getEndereco(), usuario.getEstado().toString(), usuario.getTipoUsuario().toString(), usuario.getDataNascimento().toString());
     }
 
-    private Boolean validarCpfEmail(Usuario usuario) {
+    protected Boolean validarCpfEmail(Usuario usuario) {
         if (repository.existsByCpfCnpj(usuario.getCpfCnpj())) {
             throw new CpfCnpjJaCadastrado("CPF/CNPJ já cadastrado no sistema");
         }
@@ -87,12 +87,13 @@ public class UsuarioService {
         return true;
     }
 
-    private Boolean validarEmail(Usuario usuario) {
-        if (repository.existsByEmail(usuario.getEmail())) {
-            throw new EmailJaCadastrado("E-mail já cadastrado no sistema");
-        }
-        return true;
-    }
+    //TODO Método não utilizado, verificar necessidade
+//    private Boolean validarEmail(Usuario usuario) {
+//        if (repository.existsByEmail(usuario.getEmail())) {
+//            throw new EmailJaCadastrado("E-mail já cadastrado no sistema");
+//        }
+//        return true;
+//    }
 
     private Boolean validarSenha(Usuario usuario) {
 
