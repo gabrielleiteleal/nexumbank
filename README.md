@@ -3,6 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Status-Em%20Desenvolvimento-blue" />
   <img src="https://img.shields.io/badge/Java-17%2B-orange" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-API-green" />
   <img src="https://img.shields.io/badge/Tests-Parcialmente%20Implementados-yellow" />
   <img src="https://img.shields.io/badge/License-MIT-green" />
   <img src="https://img.shields.io/badge/GitHub-Portfólio-black" />
@@ -16,23 +17,25 @@
 
 O **NexumBank** é um sistema que simula o funcionamento de um banco digital, permitindo a aplicação prática de conceitos fundamentais de programação e regras de negócio do domínio financeiro.
 
-Este projeto foi idealizado com foco em **aprendizado contínuo**, organização de código e preparação para desafios reais do mercado.
+➡️ Este projeto foi idealizado com foco em **aprendizado contínuo**, organização de código e preparação para desafios reais do mercado.
 
 🔎 Funcionalidades principais:
-- Cadastro e autenticação de usuários  
-- Criação e gerenciamento de contas bancárias  
-- Depósitos, saques e transferências  
-- Histórico de transações  
-- Validações de regras de negócio  
+- 🛠️ **Cadastro e autenticação de usuários**
+- 📄 **Criação e gerenciamento de contas bancárias**
+- 💲 **Depósitos, saques e transferências**
+- 📆 **Histórico de transações**
+- 🔐 **Validações de regras de negócio**
 
 ---
 
 ## 🚀 Tecnologias Utilizadas
 
 - **Linguagem:** Java 17+  
-- **Paradigma:** Programação Orientada a Objetos (POO)  
+- **Framework:** Spring Boot
+- **Banco de dados:** MySQL / H2 (test)
+- **Build:** Maven
 - **Versionamento:** Git e GitHub  
-- **Ferramentas:** IntelliJ IDEA
+- **Testes:** JUnit / Mockito
 
 > O projeto foi estruturado visando legibilidade, manutenibilidade e escalabilidade.
 
@@ -42,9 +45,10 @@ Este projeto foi idealizado com foco em **aprendizado contínuo**, organização
 
 Antes de executar o projeto, é necessário ter instalado:
 
-- Java JDK 17 ou superior  
-- Git  
-- IDE de sua preferência  
+- 🧰 **Java JDK 17 ou superior**
+- 🐬 **MySQL** (ou use H2 em modo dev)
+- 📦 **Maven**
+- 🧑‍💻 **IDE (IntelliJ, Eclipse, VS Code)**
 
 ---
 
@@ -60,11 +64,9 @@ cd nexumbank
 ### 🔹 Executar a aplicação
 
 ```bash
-javac Main.java
-java Main
+mvn clean install
+mvn spring-boot:run
 ```
-
-> Caso utilize Maven ou outro gerenciador de dependências, adapte os comandos conforme sua configuração local.
 
 ---
 
@@ -97,8 +99,11 @@ Esse processo reflete um ambiente próximo ao desenvolvimento real utilizado em 
 📦 nexumbank
  ┣ 📂 src
  ┃ ┣ 📂 main
+ ┃ ┃ ┣ 📂 java
+ ┃ ┃ ┗ 📂 resources
  ┃ ┗ 📂 test
  ┣ 📄 .gitignore
+ ┣ 📄 pom.xml
  ┣ 📄 README.md
 ```
 
