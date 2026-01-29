@@ -12,6 +12,9 @@
 > Projeto educacional de **simulação de banco digital**, desenvolvido com foco em **boas práticas, lógica de negócio e portfólio profissional** para a área de desenvolvimento.
 
 ---
+<img src="https://github.com/gabrielleiteleal/nexumbank/blob/main/src/main/resources/static/images/preview-nexumbank.png" alt="" width="100%">
+
+---
 
 ## 🧠 Visão Geral
 
