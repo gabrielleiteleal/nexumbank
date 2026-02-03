@@ -324,30 +324,40 @@ class UsuarioServiceTest {
     class validatePassword {
 
         @Test
-        @DisplayName("Should validate password if passwords where same")
-        void shouldValidatePasswordIfPasswordsWhereSame() {
+        @DisplayName("Should validate password if passwords where the same")
+        void shouldValidatePasswordIfPasswordsWhereTheSame() {
 
             //Arrange
-            Usuario usuario = new Usuario(usuarioRequestDTO);
-            usuario.setIdUsuario(1L);
-            usuario.setSenha("senha123");
+            String rawPassword = "senha123";
 
-//            var encodedPassword = "hashBanco";
+            String encodedPassword = "HashBanco";
 
-            var encodedPassword = doReturn(usuario.getSenha()).when(repository).findById(1L).toString();
+            Usuario usuarioRequest = new Usuario(usuarioRequestDTO);
+            usuarioRequest.setIdUsuario(1L);
+            usuarioRequest.setSenha(rawPassword);
+
+            Usuario usuarioBanco = new Usuario(usuarioRequestDTO);
+            usuarioBanco.setIdUsuario(1L);
+            usuarioBanco.setSenha(encodedPassword);
+
+            doReturn(Optional.of(usuarioBanco)).when(repository).findById(1L);
 
             ArgumentCaptor<String> encodedUserStringArgumentCapturer = ArgumentCaptor.forClass(String.class);
 
-            when(passwordEncoder.matches(encodedPassword, usuario.getSenha())).thenReturn(true);
+            when(passwordEncoder.matches(encodedUserStringArgumentCapturer.capture(), userStringArgumentCapturer.capture())).thenReturn(true);
 
             //Act
-            var output = usuarioService.validarSenha(usuario);
-
-            verify(passwordEncoder).matches(encodedUserStringArgumentCapturer.capture(), userStringArgumentCapturer.capture());
+            var output = usuarioService.validarSenha(usuarioRequest);
 
             //Assert
             assertNotNull(output);
-            assertEquals("senha123", userStringArgumentCapturer.getValue());
+            assertTrue(output);
+
+            verify(passwordEncoder).matches(any(), any());
+
+
+            assertEquals(rawPassword, userStringArgumentCapturer.getValue());
+            assertEquals(encodedPassword, encodedUserStringArgumentCapturer.getValue());
 
         }
     }
