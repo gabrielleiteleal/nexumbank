@@ -151,6 +151,7 @@ class UsuarioServiceTest {
         @Test
         @DisplayName("Should create a new user successfully")
         void shouldCreateNewUserSuccessfully() {
+
             //Arrange
             Usuario usuario = new Usuario(usuarioRequestDTO);
 
@@ -198,15 +199,18 @@ class UsuarioServiceTest {
         @DisplayName("Should throw exception if email already exists")
         void shouldThrowExceptionIfEmailAlreadyExists() {
 
+            //Arrange
             Usuario usuario = new Usuario(usuarioRequestDTO);
 
             doReturn(true).when(repository).existsByEmail(userStringArgumentCapturer.capture());
 
+            //Act
             EmailJaCadastrado exception = assertThrows(EmailJaCadastrado.class,
                     () -> usuarioService.criarUsuario(usuarioRequestDTO));
 
             var userStringCaptured = userStringArgumentCapturer.getValue();
 
+            //Assert
             assertEquals("E-mail já cadastrado no sistema", exception.getMessage());
             assertEquals(usuario.getEmail(), userStringCaptured);
 
@@ -215,29 +219,11 @@ class UsuarioServiceTest {
 
         }
 
-        //TODO delete this
-        @Test
-        @DisplayName("Should create a new user successfully 2")
-        void shouldCreateNewUser2() {
-
-            when(passwordEncoder.encode(any())).thenReturn("SenhaCriptografada");
-
-            when(repository.save(any())).thenAnswer(invocation -> {
-                Usuario u = invocation.getArgument(0);
-                u.setIdUsuario(1L);
-                return u;
-            });
-
-            var output = usuarioService.criarUsuario(usuarioRequestDTO);
-
-            assertNotNull(output);
-            verify(repository).save(any());
-
-        }
     }
 
     @Nested
     class editUserTests {
+
         @Test
         @DisplayName("Should edit user successfully")
         void shouldEditUserSuccessfully() {
@@ -247,7 +233,18 @@ class UsuarioServiceTest {
             usuarioExistente.setTelefone("1111111111");
             usuarioExistente.setEndereco("Antigo endereço");
 
-            UsuarioRequestDTO usuarioEditado = new UsuarioRequestDTO("João Lucas", "123.456.789-00", "gabriel@email.com", "123123123", "senha123", "Novo Endereço", "SP", "CLIENTE", "07/11/2004", "Programador", 5.000);
+            UsuarioRequestDTO usuarioEditado = new UsuarioRequestDTO(
+                    "João Lucas",
+                    "123.456.789-00",
+                    "gabriel@email.com",
+                    "123123123",
+                    "senha123",
+                    "Novo Endereço",
+                    "SP",
+                    "CLIENTE",
+                    "07/11/2004",
+                    "Programador",
+                    5.000);
 
             when(repository.findById(1L)).thenReturn(Optional.of(usuarioExistente));
 
@@ -260,14 +257,28 @@ class UsuarioServiceTest {
             assertEquals("123123123", response.telefone());
             assertEquals("Novo Endereço", response.endereco());
 
-            ArgumentCaptor<Usuario> argumentCaptor = ArgumentCaptor.forClass(Usuario.class);
-            verify(repository).save(argumentCaptor.capture());
+//            ArgumentCaptor<Usuario> argumentCaptor = ArgumentCaptor.forClass(Usuario.class);
+            verify(repository).save(userArgumentCapturer.capture());
 
-            Usuario usuarioSalvo = argumentCaptor.getValue();
+            Usuario usuarioSalvo = userArgumentCapturer.getValue();
 
             assertEquals("João Lucas", usuarioSalvo.getNome());
             assertEquals("123123123", usuarioSalvo.getTelefone());
             assertEquals("Novo Endereço", usuarioSalvo.getEndereco());
+        }
+
+        @Test
+        @DisplayName("Should throw user not founded exception if ID aren't find")
+        void shouldThrowUserNotFoundedExceptionIfIdArentFind() {
+            Usuario usuario = new Usuario(usuarioRequestDTO);
+            usuario.setIdUsuario(1L);
+            var userNotFound = 999L;
+
+            doReturn(Optional.of(usuario)).when(repository.findById(userNotFound));
+
+            UsuarioNaoEncontrado exception = assertThrows(UsuarioNaoEncontrado.class, () -> usuarioService.buscarUsuario(userNotFound));
+
+            assertEquals("Usuário não encontrado. Id: " + 999L, exception.getMessage());
 
         }
     }
@@ -306,6 +317,38 @@ class UsuarioServiceTest {
 
             assertTrue(result);
             assertEquals(userId, idCaputred);
+        }
+    }
+
+    @Nested
+    class validatePassword {
+
+        @Test
+        @DisplayName("Should validate password if passwords where same")
+        void shouldValidatePasswordIfPasswordsWhereSame() {
+
+            //Arrange
+            Usuario usuario = new Usuario(usuarioRequestDTO);
+            usuario.setIdUsuario(1L);
+            usuario.setSenha("senha123");
+
+//            var encodedPassword = "hashBanco";
+
+            var encodedPassword = doReturn(usuario.getSenha()).when(repository).findById(1L).toString();
+
+            ArgumentCaptor<String> encodedUserStringArgumentCapturer = ArgumentCaptor.forClass(String.class);
+
+            when(passwordEncoder.matches(encodedPassword, usuario.getSenha())).thenReturn(true);
+
+            //Act
+            var output = usuarioService.validarSenha(usuario);
+
+            verify(passwordEncoder).matches(encodedUserStringArgumentCapturer.capture(), userStringArgumentCapturer.capture());
+
+            //Assert
+            assertNotNull(output);
+            assertEquals("senha123", userStringArgumentCapturer.getValue());
+
         }
     }
 

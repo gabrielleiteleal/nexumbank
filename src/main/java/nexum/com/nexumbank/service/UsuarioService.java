@@ -95,7 +95,7 @@ public class UsuarioService {
 //        return true;
 //    }
 
-    private Boolean validarSenha(Usuario usuario) {
+    protected Boolean validarSenha(Usuario usuario) {
 
         Usuario usuarioBanco = repository.findById(usuario.getIdUsuario()).orElseThrow(() -> new UsuarioNaoEncontrado("Usuário não encontrado. Id: " + usuario.getIdUsuario()));
         if (!(passwordEncoder.matches(usuarioBanco.getSenha(), usuario.getSenha()))) {
