@@ -270,15 +270,19 @@ class UsuarioServiceTest {
         @Test
         @DisplayName("Should throw user not founded exception if ID aren't find")
         void shouldThrowUserNotFoundedExceptionIfIdArentFind() {
-            Usuario usuario = new Usuario(usuarioRequestDTO);
-            usuario.setIdUsuario(1L);
-            var userNotFound = 999L;
 
-            doReturn(Optional.of(usuario)).when(repository.findById(userNotFound));
+            //Arrange
+            Long userNotFoundId = 999L;
 
-            UsuarioNaoEncontrado exception = assertThrows(UsuarioNaoEncontrado.class, () -> usuarioService.buscarUsuario(userNotFound));
+            doReturn(Optional.empty()).when(repository).findById(userNotFoundId);
 
-            assertEquals("Usuário não encontrado. Id: " + 999L, exception.getMessage());
+            //Act
+            UsuarioNaoEncontrado exception = assertThrows(UsuarioNaoEncontrado.class, () -> usuarioService.buscarUsuario(userNotFoundId));
+
+            //Assert
+            assertEquals("Usuário não encontrado. Id: " + userNotFoundId, exception.getMessage());
+
+            verify(repository).findById(userNotFoundId);
 
         }
     }
