@@ -62,7 +62,7 @@ function formatarTelefone(telefone) {
 function formatarData(data) {
     if (!data) return '';
     const [ano, mes, dia] = data.split('-');
-    return `${dia}/${mes}/${ano}`;
+    return `${ano}-${mes}-${dia}`;
 }
 
 function formatarDataInput(data) {
@@ -143,28 +143,33 @@ function preencherDadosPerfil(usuario, cliente, conta) {
 
     const form = document.getElementById('profileForm');
     if (form) {
-        form.querySelector('input[value="João Silva Santos"]').value = usuario.nome;
+        form.querySelector('input[value="nome"]').value = usuario.nome;
 
-        form.querySelector('input[value="123.456.789-01"]').value = formatarCPF(usuario.cpf_cnpj);
+        form.querySelector('input[value="cpf"]').value = formatarCPF(usuario.cpf_cnpj);
 
-        form.querySelector('input[value="joao.silva@email.com"]').value = usuario.email;
+        form.querySelector('input[value="email"]').value = usuario.email;
 
-        form.querySelector('input[value="(11) 99999-9999"]').value = formatarTelefone(usuario.telefone);
+        form.querySelector('input[value="telefone"]').value = formatarTelefone(usuario.telefone);
 
         if (usuario.data_nascimento) {
+            //TODO deletar linha 156
+            console.log(usuario.data_nascimento)
             const dataInput = form.querySelector('input[type="date"]');
             if (dataInput) {
-                const dataFormatada = formatarDataInput(usuario.data_nascimento);
-                dataInput.value = dataFormatada;
+                dataInput.value = formatarData(usuario.data_nascimento);
             }
         }
 
         if (cliente?.profissao) {
-            form.querySelector('input[value="Engenheiro de Software"]').value = cliente.profissao;
+            form.querySelector('input[value="profissao"]').value = cliente.profissao;
+        }else{
+            form.querySelector('input[value="profissao"]').value = "Não especificado";
         }
 
         if (cliente?.renda_mensal) {
-            form.querySelector('input[value="R$ 8.500,00"]').value = formatarMoeda(cliente.renda_mensal);
+            form.querySelector('input[value="rendaMensal"]').value = formatarMoeda(cliente.renda_mensal);
+        }else{
+            form.querySelector('input[value="rendaMensal"]').value = "R$ 0,00";
         }
     }
 
@@ -219,7 +224,7 @@ async function inicializarPagina() {
 
         preencherDadosPerfil(usuario, cliente, conta);
 
-        console.log('Dados carregados:', { usuario, cliente, conta });
+        console.log('Dados carregados:', {usuario, cliente, conta});
 
     } catch (error) {
         console.error('Erro ao inicializar página:', error);
