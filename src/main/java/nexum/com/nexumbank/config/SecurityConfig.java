@@ -21,10 +21,14 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:8080", "http://127.0.0.1:8080", "http://localhost:64318")
+                        .allowedOrigins("http://localhost:8080", "http://127.0.0.1:8080", "http://localhost:64318", "http://localhost:63342")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
+
+//                #Pode ser usado, mas é má prática
+//                registry.addMapping("/**").allowedOrigins("*");
+
             }
         };
     }
