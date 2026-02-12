@@ -101,6 +101,56 @@ async function loadAndRenderBalance() {
     }
 }
 
+async function setAgencyNumber() {
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/conta`, {
+            method: 'GET'
+        })
+
+        if (!response.ok) {
+            let errorMsg = "Erro ao buscar a conta";
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData?.message || errorMsg;
+            } catch (e) {
+            }
+            throw new Error(errorMsg);
+        }
+
+        const data = await response.json();
+
+        let agencyNumber = null;
+        if (Array.isArray(data) && data.length > 0) {
+            agencyNumber = data[0]?.agencia ?? null;
+        } else if (data && typeof data === 'object') {
+            agencyNumber = data.agencia ?? null;
+        }
+
+        if (agencyNumber === null || agencyNumber === undefined) {
+            throw new Error('Agência não encontrada no retorno da API');
+        }
+
+        console.log(agencyNumber);
+        return agencyNumber
+
+    } catch (erro) {
+        throw erro;
+    }
+}
+
+async function loadAndRenderAgencyNumber() {
+    const agencyNumberElement = document.getElementById('agencyNumber');
+    if (!agencyNumberElement) return;
+
+    try {
+        agencyNumberElement.textContent = await setAgencyNumber();
+    } catch (error) {
+        console.error('Erro ao carregar agência:', error);
+        agencyNumberElement.textContent = '000-0';
+    }
+}
+
 setupToggleVisibility('toggleSaldo', 'saldoValue', 'saldoHidden', 'saldoIcon');
 setupToggleVisibility('toggleInvestimentos', 'investimentosValue', 'investimentosHidden', 'investimentosIcon');
 setupToggleVisibility('toggleCartao', 'cartaoValue', 'cartaoHidden', 'cartaoIcon');
@@ -137,6 +187,7 @@ function formatCurrency(value) {
 
 window.addEventListener('DOMContentLoaded', () => {
     loadAndRenderBalance();
+    loadAndRenderAgencyNumber()
 
     const refreshBtn = document.getElementById('refreshSaldo');
     if (refreshBtn) {
