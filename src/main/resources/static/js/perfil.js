@@ -139,6 +139,7 @@ function preencherDadosPerfil(usuario, cliente, conta) {
     if (conta) {
         document.querySelector('.account-info .col-4 .fw-bold').textContent = conta.agencia;
         document.querySelector('.account-info .col-8 .fw-bold').textContent = conta.numero_conta;
+        document.querySelector('small[id="profileStatus"]').textContent = conta.status_conta;
     }
 
     const form = document.getElementById('profileForm');
