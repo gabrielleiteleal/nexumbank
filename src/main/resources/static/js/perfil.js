@@ -139,7 +139,23 @@ function preencherDadosPerfil(usuario, cliente, conta) {
     if (conta) {
         document.querySelector('.account-info .col-4 .fw-bold').textContent = conta.agencia;
         document.querySelector('.account-info .col-8 .fw-bold').textContent = conta.numero_conta;
-        document.querySelector('small[id="profileStatus"]').textContent = conta.status_conta;
+        const accountStatus = document.querySelector('small[id="accountStatus"]');
+        if (accountStatus) {
+            const status = conta.status_conta;
+            console.log(status);
+            if (status.includes('Ativo')) {
+                accountStatus.style.color = '#28ff28';
+                accountStatus.textContent = conta.status_conta;
+            } else if (status.includes('Bloqueado')) {
+                accountStatus.style.color = '#ff6868';
+                accountStatus.textContent = conta.status_conta;
+            } else {
+                accountStatus.style.color = 'gray';
+            }
+        }
+
+        document.querySelector('small[id="accountStatus"]').textContent = conta.status_conta;
+
     }
 
     const form = document.getElementById('profileForm');
@@ -163,13 +179,13 @@ function preencherDadosPerfil(usuario, cliente, conta) {
 
         if (cliente?.profissao) {
             form.querySelector('input[value="profissao"]').value = cliente.profissao;
-        }else{
+        } else {
             form.querySelector('input[value="profissao"]').value = "Não especificado";
         }
 
         if (cliente?.renda_mensal) {
             form.querySelector('input[value="rendaMensal"]').value = formatarMoeda(cliente.renda_mensal);
-        }else{
+        } else {
             form.querySelector('input[value="rendaMensal"]').value = "R$ 0,00";
         }
     }
