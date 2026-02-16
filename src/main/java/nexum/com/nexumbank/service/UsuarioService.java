@@ -63,6 +63,7 @@ public class UsuarioService {
     public UsuarioResponseDTO editarEndereco(Long id, AddressRequestDTO addressRequestDTO){
         Usuario usuario = repository.findById(id).orElseThrow(() -> new UsuarioNaoEncontrado("Usuário não encontrado. Id: " + id));
         usuario.setEndereco(addressRequestDTO.endereco());
+        usuario.setEstado(addressRequestDTO.estado());
 
         repository.save(usuario);
         return toDTO(usuario);
@@ -91,14 +92,6 @@ public class UsuarioService {
         }
         return true;
     }
-
-    //TODO Método não utilizado, verificar necessidade
-//    private Boolean validarEmail(Usuario usuario) {
-//        if (repository.existsByEmail(usuario.getEmail())) {
-//            throw new EmailJaCadastrado("E-mail já cadastrado no sistema");
-//        }
-//        return true;
-//    }
 
     protected Boolean validarSenha(Usuario usuario) {
 

@@ -1,4 +1,6 @@
 package nexum.com.nexumbank.dto.usuario;
 
-public record AddressRequestDTO(String endereco) {
+import nexum.com.nexumbank.model.enums.Estado;
+
+public record AddressRequestDTO(String endereco, Estado estado) {
 }
