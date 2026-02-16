@@ -249,12 +249,31 @@ async function editarInformacoesPessoais() {
     saveButton.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Salvando...';
     saveButton.disabled = true;
 
+    let enderecoAtual = usuarioLogado.endereco || '';
+    const addressForm = document.getElementById('addressForm');
+    if(addressForm){
+        addresInputs = addressForm.querySelectorAll('input, select');
+        const logradouro = (addresInputs[0]?.value || '').trim();
+        const numero = (addresInputs[1]?.value || '').trim();
+        const complemento = (addresInputs[2]?.value || '').trim();
+        const bairro = (addresInputs[3]?.value || '').trim();
+        const cidade = (addresInputs[4]?.value || '').trim();
+        const cep = (addresInputs[5]?.value || '').trim();
+        const estado = (addresInputs[6]?.value || '').trim();
+
+        const partes = [logradouro, numero, complemento, bairro, cidade, estado, cep].filter(p => p.length);
+        if (partes.length) {
+            enderecoAtual = partes.join(', ');
+        }
+    }
+    console.log("Endereço: " + enderecoAtual)
+
     try {
         const inputs = form.querySelectorAll('input, select');
         const dados = {
             nome: inputs[0].value,
             telefone: inputs[3].value,
-            endereco: null,
+            endereco: enderecoAtual,
         };
 
         const response = await fetch(`${API_BASE_URL}/usuario/${usuarioLogado.id_usuario}`, {

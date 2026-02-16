@@ -303,7 +303,6 @@
                                 </div>
 
 
-
                                 <div class="d-none mt-4" id="addressActionButtons">
                                     <div class="d-flex gap-2">
                                         <button type="button" class="btn btn-success" onclick="saveAddress()">
@@ -491,19 +490,16 @@
 
         const isEditing = !inputs[0].readOnly;
 
-        inputs.forEach(input => {
-            if (input.type !== 'text' || input.previousElementSibling.textContent.includes('CPF')) {
-                return;
-            }
-            input.readOnly = isEditing;
-            input.disabled = isEditing;
+        inputs[0].readOnly = isEditing;
+        inputs[3].readOnly = isEditing;
 
-            if (!isEditing) {
-                input.classList.add('border-primary');
-            } else {
-                input.classList.remove('border-primary');
-            }
-        });
+        if (!isEditing) {
+            inputs[0].classList.add('border-primary');
+            inputs[3].classList.add('border-primary');
+        } else {
+            inputs[0].classList.remove('border-primary');
+            inputs[3].classList.remove('border-primary');
+        }
 
         if (!isEditing) {
             actionButtons.classList.remove('d-none');
