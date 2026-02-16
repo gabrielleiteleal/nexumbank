@@ -2,10 +2,7 @@ package nexum.com.nexumbank.service;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import nexum.com.nexumbank.dto.usuario.UsuarioLoginRequestDTO;
-import nexum.com.nexumbank.dto.usuario.UsuarioLoginResponseDTO;
-import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
-import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
+import nexum.com.nexumbank.dto.usuario.*;
 import nexum.com.nexumbank.exception.CpfCnpjJaCadastrado;
 import nexum.com.nexumbank.exception.EmailJaCadastrado;
 import nexum.com.nexumbank.exception.SenhaIncorreta;
@@ -58,6 +55,14 @@ public class UsuarioService {
         usuario.setNome(usuarioRequestDTO.nome());
         usuario.setTelefone(usuarioRequestDTO.telefone());
         usuario.setEndereco(usuarioRequestDTO.endereco());
+
+        repository.save(usuario);
+        return toDTO(usuario);
+    }
+
+    public UsuarioResponseDTO editarEndereco(Long id, AddressRequestDTO addressRequestDTO){
+        Usuario usuario = repository.findById(id).orElseThrow(() -> new UsuarioNaoEncontrado("Usuário não encontrado. Id: " + id));
+        usuario.setEndereco(addressRequestDTO.endereco());
 
         repository.save(usuario);
         return toDTO(usuario);

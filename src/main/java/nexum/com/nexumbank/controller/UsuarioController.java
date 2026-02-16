@@ -1,9 +1,6 @@
 package nexum.com.nexumbank.controller;
 
-import nexum.com.nexumbank.dto.usuario.UsuarioLoginRequestDTO;
-import nexum.com.nexumbank.dto.usuario.UsuarioLoginResponseDTO;
-import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
-import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
+import nexum.com.nexumbank.dto.usuario.*;
 import nexum.com.nexumbank.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +33,11 @@ public class UsuarioController {
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> editarUsuario(@PathVariable Long id, @RequestBody UsuarioRequestDTO usuarioRequestDTO) {
         return ResponseEntity.status(201).body(usuarioService.editarUsuario(id, usuarioRequestDTO));
+    }
+
+    @PutMapping("/{id}/endereco")
+    public ResponseEntity<UsuarioResponseDTO> editarEndereco(@PathVariable Long id, @RequestBody AddressRequestDTO addressRequestDTO){
+        return ResponseEntity.status(201).body(usuarioService.editarEndereco(id, addressRequestDTO));
     }
 
     @DeleteMapping("/{id}")
