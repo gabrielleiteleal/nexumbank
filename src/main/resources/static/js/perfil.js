@@ -185,10 +185,8 @@ function preencherDadosPerfil(usuario, cliente, conta) {
             if (inputs[0]) inputs[0].value = enderecoParts.logradouro || '';
 
             if (inputs[1]) inputs[1].value = enderecoParts.numero || '';
-            console.log(enderecoParts.numero + " perfil.js - 204");
 
             if (inputs[2]) inputs[2].value = enderecoParts.complemento || '';
-            console.log(enderecoParts.complemento + " perfil.js - 207");
 
             if (inputs[3]) inputs[3].value = enderecoParts.bairro || '';
 
@@ -251,7 +249,7 @@ async function editarInformacoesPessoais() {
 
     let enderecoAtual = usuarioLogado.endereco || '';
     const addressForm = document.getElementById('addressForm');
-    if(addressForm){
+    if (addressForm) {
         addresInputs = addressForm.querySelectorAll('input, select');
         const logradouro = (addresInputs[0]?.value || '').trim();
         const numero = (addresInputs[1]?.value || '').trim();
@@ -259,9 +257,9 @@ async function editarInformacoesPessoais() {
         const bairro = (addresInputs[3]?.value || '').trim();
         const cidade = (addresInputs[4]?.value || '').trim();
         const cep = (addresInputs[5]?.value || '').trim();
-        const estado = (addresInputs[6]?.value || '').trim();
+        // const estado = (addresInputs[6]?.value || '').trim();
 
-        const partes = [logradouro, numero, complemento, bairro, cidade, estado, cep].filter(p => p.length);
+        const partes = [logradouro, numero, complemento, bairro, cidade, cep].filter(p => p.length);
         if (partes.length) {
             enderecoAtual = partes.join(', ');
         }
@@ -304,6 +302,14 @@ async function editarInformacoesPessoais() {
     }
 }
 
+function applyPhoneMask(phone) {
+    return phone.replace(/\D/g, '')
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2')
+        .replace(/(\d{4})-(\d)(\d{4})/, '$1$2-$3')
+        .replace(/(-\d{4})\d+?$/, '$1');
+}
+
 function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
@@ -332,4 +338,9 @@ function confirmLogout() {
 }
 
 document.addEventListener('DOMContentLoaded', inicializarPagina);
+document.addEventListener('DOMContentLoaded', function(){
+    document.getElementById('telefone').addEventListener('input', function(e) {
+        e.target.value = applyPhoneMask(e.target.value);
+    });
+});
 
