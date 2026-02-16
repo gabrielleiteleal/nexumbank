@@ -114,6 +114,7 @@ async function saveAddress() {
     const saveButton = document.querySelector('button[onclick="saveAddress()"]');
 
     let addressEdited = '';
+    let stateEdited = '';
     const addressForm = document.getElementById('addressForm');
     if (addressForm) {
         addresInputs = addressForm.querySelectorAll('input, select');
@@ -127,14 +128,16 @@ async function saveAddress() {
         let partsAddress = [logradouro, numero, complemento, bairro, cidade, cep].filter(p => p.length);
         if (partsAddress.length) {
             addressEdited = partsAddress.join(', ');
-            addressEdited += ", ";
-            addressEdited += addresInputs[6]?.value || '';
         }
+        stateEdited = (addresInputs[6]?.value || '').trim();
     }
 
     const endereco = {
-        'endereco': addressEdited
+        'endereco': addressEdited,
+        'estado': stateEdited
     };
+
+    console.log(endereco);
 
     try {
         const response = await fetch(`http://localhost:8080/usuario/${usuarioLogado.id_usuario}/endereco`, {
@@ -314,14 +317,12 @@ async function editarInformacoesPessoais() {
         const bairro = (addresInputs[3]?.value || '').trim();
         const cidade = (addresInputs[4]?.value || '').trim();
         const cep = (addresInputs[5]?.value || '').trim();
-        // const estado = (addresInputs[6]?.value || '').trim();
 
         const partes = [logradouro, numero, complemento, bairro, cidade, cep].filter(p => p.length);
         if (partes.length) {
             enderecoAtual = partes.join(', ');
         }
     }
-    console.log("Endereço: " + enderecoAtual)
 
     try {
         const inputs = form.querySelectorAll('input, select');
