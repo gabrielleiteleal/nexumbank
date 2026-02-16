@@ -92,33 +92,18 @@ function extrairEndereco(enderecoCompleto) {
     };
 
     try {
-        const cepMatch = enderecoCompleto.match(/CEP:\s*(\d{5}-?\d{3})/);
-        if (cepMatch) {
-            partes.cep = cepMatch[1];
-        }
 
-        let endereco = enderecoCompleto.replace(/\s*-?\s*CEP:\s*\d{5}-?\d{3}/, '');
+        const campos = enderecoCompleto.split(',').map((item => item.trim()));
 
-        const partesVirgula = endereco.split(',');
+        partes.logradouro = campos[0] || '';
+        partes.numero = campos[1] || '';
+        partes.complemento = campos[2] || '';
+        partes.bairro = campos[3] || '';
+        partes.cidade = campos[4] || '';
+        partes.cep = campos[5] || '';
 
-        if (partesVirgula.length >= 2) {
-            const primeiraParteTracos = partesVirgula[0].split('-');
-            if (primeiraParteTracos.length > 0) {
-                const logradouroNumero = primeiraParteTracos[0].trim().split(',');
-                partes.logradouro = logradouroNumero[0]?.trim() || '';
-                partes.numero = logradouroNumero[1]?.trim() || '';
-            }
+        console.log(campos[5])
 
-            const segundaParteTracos = partesVirgula.slice(1).join(',').split('-');
-
-            if (segundaParteTracos.length >= 2) {
-                partes.complemento = segundaParteTracos[0]?.trim() || '';
-                partes.bairro = segundaParteTracos[1]?.trim() || '';
-                partes.cidade = segundaParteTracos[2]?.trim() || '';
-            } else {
-                partes.cidade = segundaParteTracos[0]?.trim() || '';
-            }
-        }
     } catch (error) {
         console.error('Erro ao extrair endereço:', error);
     }
@@ -197,17 +182,19 @@ function preencherDadosPerfil(usuario, cliente, conta) {
         if (addressForm) {
             const inputs = addressForm.querySelectorAll('input');
 
-            if (inputs[0]) inputs[0].value = enderecoParts.cep || '';
+            if (inputs[0]) inputs[0].value = enderecoParts.logradouro || '';
 
-            if (inputs[1]) inputs[1].value = enderecoParts.logradouro || '';
+            if (inputs[1]) inputs[1].value = enderecoParts.numero || '';
+            console.log(enderecoParts.numero + " perfil.js - 204");
 
-            if (inputs[2]) inputs[2].value = enderecoParts.numero || '';
+            if (inputs[2]) inputs[2].value = enderecoParts.complemento || '';
+            console.log(enderecoParts.complemento + " perfil.js - 207");
 
-            if (inputs[3]) inputs[3].value = enderecoParts.complemento || '';
+            if (inputs[3]) inputs[3].value = enderecoParts.bairro || '';
 
-            if (inputs[4]) inputs[4].value = enderecoParts.bairro || '';
+            if (inputs[4]) inputs[4].value = enderecoParts.cidade || '';
 
-            if (inputs[5]) inputs[5].value = enderecoParts.cidade || '';
+            if (inputs[5]) inputs[5].value = enderecoParts.cep || '';
 
             if (inputs[6] && usuario.estado) {
                 inputs[6].value = `${usuario.estado}`;
@@ -251,7 +238,7 @@ async function inicializarPagina() {
     }
 }
 
-async function salvarPerfil() {
+async function editarInformacoesPessoais() {
     const usuarioLogado = verificarAutenticacao();
     if (!usuarioLogado) return;
 
@@ -266,15 +253,8 @@ async function salvarPerfil() {
         const inputs = form.querySelectorAll('input, select');
         const dados = {
             nome: inputs[0].value,
-            cpf_cnpj: inputs[1].value,
-            email: inputs[2].value,
             telefone: inputs[3].value,
             endereco: null,
-            estado: null,
-            tipo_usuario: usuarioLogado.tipo_usuario,
-            data_nascimento: formatarData(inputs[4].value),
-            profissao: inputs[6].value,
-            renda_mensal: null
         };
 
         const response = await fetch(`${API_BASE_URL}/usuario/${usuarioLogado.id_usuario}`, {

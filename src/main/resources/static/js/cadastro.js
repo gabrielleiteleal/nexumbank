@@ -117,13 +117,7 @@ function montarEnderecoCompleto() {
     const cidade = document.getElementById('cidade').value;
     const cep = document.getElementById('cep').value;
 
-    let endereco = `${logradouro}, ${numero}`;
-    if (complemento) {
-        endereco += ` - ${complemento}`;
-    }
-    endereco += ` - ${bairro}, ${cidade} - CEP: ${cep}`;
-
-    return endereco;
+    return `${logradouro},${numero},${complemento},${bairro},${cidade}, ${cep}`;
 }
 
 function converterDataParaBR(dataISO) {
