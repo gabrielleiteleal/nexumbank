@@ -456,7 +456,9 @@
 
 <script src="../static/js/perfil.js"></script>
 
+
 <script>
+    //TODO move this script to perfil.js
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -547,22 +549,6 @@
             editButton.innerHTML = '<i class="bi bi-pencil me-1"></i>Editar Endereço';
             editButton.onclick = toggleAddressEdit;
         }
-    }
-
-    function saveAddress() {
-        const saveButton = document.querySelector('button[onclick="saveAddress()"]');
-
-        saveButton.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Salvando...';
-        saveButton.disabled = true;
-
-        setTimeout(() => {
-            saveButton.innerHTML = '<i class="bi bi-check-circle me-1"></i>Salvo!';
-
-            setTimeout(() => {
-                cancelAddressEdit();
-                showNotification('Endereço atualizado com sucesso!', 'success');
-            }, 1000);
-        }, 2000);
     }
 
     function cancelAddressEdit() {

@@ -102,13 +102,72 @@ function extrairEndereco(enderecoCompleto) {
         partes.cidade = campos[4] || '';
         partes.cep = campos[5] || '';
 
-        console.log(campos[5])
-
     } catch (error) {
         console.error('Erro ao extrair endereço:', error);
     }
 
     return partes;
+}
+
+async function saveAddress() {
+    const usuarioLogado = verificarAutenticacao();
+    const saveButton = document.querySelector('button[onclick="saveAddress()"]');
+
+    let addressEdited = '';
+    const addressForm = document.getElementById('addressForm');
+    if (addressForm) {
+        addresInputs = addressForm.querySelectorAll('input, select');
+        const logradouro = (addresInputs[0]?.value || '').trim();
+        const numero = (addresInputs[1]?.value || '').trim();
+        const complemento = (addresInputs[2]?.value || '').trim();
+        const bairro = (addresInputs[3]?.value || '').trim();
+        const cidade = (addresInputs[4]?.value || '').trim();
+        const cep = (addresInputs[5]?.value || '').trim();
+
+        let partsAddress = [logradouro, numero, complemento, bairro, cidade, cep].filter(p => p.length);
+        if (partsAddress.length) {
+            addressEdited = partsAddress.join(', ');
+            addressEdited += ", ";
+            addressEdited += addresInputs[6]?.value || '';
+        }
+    }
+
+    const endereco = {
+        'endereco': addressEdited
+    };
+
+    try {
+        const response = await fetch(`http://localhost:8080/usuario/${usuarioLogado.id_usuario}/endereco`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(endereco)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erro ao salvar o endereço');
+        }
+
+        saveButton.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Salvando...';
+        saveButton.disabled = true;
+
+        setTimeout(() => {
+            saveButton.innerHTML = '<i class="bi bi-check-circle me-1"></i>Salvo!';
+
+            setTimeout(() => {
+                cancelAddressEdit();
+                showNotification('Endereço atualizado com sucesso!', 'success');
+            }, 1000);
+        }, 2000);
+
+        return await response.json();
+
+    } catch (error) {
+        throw error;
+    }
+
 }
 
 function preencherDadosPerfil(usuario, cliente, conta) {
@@ -154,8 +213,6 @@ function preencherDadosPerfil(usuario, cliente, conta) {
         form.querySelector('input[value="telefone"]').value = formatarTelefone(usuario.telefone);
 
         if (usuario.data_nascimento) {
-            //TODO deletar linha 156
-            console.log(usuario.data_nascimento)
             const dataInput = form.querySelector('input[type="date"]');
             if (dataInput) {
                 dataInput.value = formatarData(usuario.data_nascimento);
@@ -338,8 +395,8 @@ function confirmLogout() {
 }
 
 document.addEventListener('DOMContentLoaded', inicializarPagina);
-document.addEventListener('DOMContentLoaded', function(){
-    document.getElementById('telefone').addEventListener('input', function(e) {
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('telefone').addEventListener('input', function (e) {
         e.target.value = applyPhoneMask(e.target.value);
     });
 });
