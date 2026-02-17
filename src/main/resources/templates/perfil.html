@@ -209,14 +209,14 @@
                                         <label class="form-label fw-semibold text-secondary">
                                             <i class="bi bi-briefcase me-2"></i>Profissão
                                         </label>
-                                        <input type="text" class="form-control" value="profissao" readonly>
+                                        <input type="text" class="form-control" id="profissao" value="profissao" readonly>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold text-secondary">
                                             <i class="bi bi-cash-stack me-2"></i>Renda Mensal
                                         </label>
-                                        <input type="text" class="form-control" value="rendaMensal" readonly>
+                                        <input type="text" class="form-control" id="rendaMensal" value="rendaMensal" readonly>
                                     </div>
                                 </div>
 
@@ -494,13 +494,19 @@
 
         inputs[0].readOnly = isEditing;
         inputs[3].readOnly = isEditing;
+        inputs[6].readOnly = isEditing;
+        inputs[7].readOnly = isEditing;
 
         if (!isEditing) {
             inputs[0].classList.add('border-primary');
             inputs[3].classList.add('border-primary');
+            inputs[6].classList.add('border-primary');
+            inputs[7].classList.add('border-primary');
         } else {
             inputs[0].classList.remove('border-primary');
             inputs[3].classList.remove('border-primary');
+            inputs[6].classList.remove('border-primary');
+            inputs[7].classList.remove('border-primary');
         }
 
         if (!isEditing) {

@@ -185,7 +185,7 @@ function preencherDadosPerfil(usuario, cliente, conta) {
         el.textContent = usuario.nome;
     });
 
-    //TODO delete this
+    //TODO será usado em cartões/pix
     const nomePartes = usuario.nome.split(' ');
     const iniciais = (nomePartes[0]?.charAt(0) || '') + (nomePartes[nomePartes.length - 1]?.charAt(0) || '');
 
@@ -196,8 +196,8 @@ function preencherDadosPerfil(usuario, cliente, conta) {
         document.querySelector('.account-info .col-8 .fw-bold').textContent = conta.numero_conta;
         const accountStatus = document.querySelector('small[id="accountStatus"]');
         if (accountStatus) {
+            //TODO melhorar estilização
             const status = conta.status_conta;
-            console.log(status);
             if (status.includes('Ativo')) {
                 accountStatus.style.color = '#28ff28';
                 accountStatus.textContent = conta.status_conta;
@@ -305,44 +305,31 @@ async function inicializarPagina() {
 }
 
 
-//TODO finalizar informações pessoais
 async function editarInformacoesPessoais() {
     const usuarioLogado = verificarAutenticacao();
     if (!usuarioLogado) return;
+    const idUsuario = usuarioLogado.id_usuario;
 
     const form = document.getElementById('profileForm');
     const saveButton = document.querySelector('button[onclick="saveProfile()"]');
     const originalText = saveButton.innerHTML;
+    const rendaMensalFormatada = parseBalanceToDouble(document.getElementById('rendaMensal').value);
+
+    console.log("Renda Formatada: " + rendaMensalFormatada);
 
     saveButton.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Salvando...';
     saveButton.disabled = true;
-
-    let enderecoAtual = usuarioLogado.endereco || '';
-    const addressForm = document.getElementById('addressForm');
-    if (addressForm) {
-        addresInputs = addressForm.querySelectorAll('input, select');
-        const logradouro = (addresInputs[0]?.value || '').trim();
-        const numero = (addresInputs[1]?.value || '').trim();
-        const complemento = (addresInputs[2]?.value || '').trim();
-        const bairro = (addresInputs[3]?.value || '').trim();
-        const cidade = (addresInputs[4]?.value || '').trim();
-        const cep = (addresInputs[5]?.value || '').trim();
-
-        const partes = [logradouro, numero, complemento, bairro, cidade, cep].filter(p => p.length);
-        if (partes.length) {
-            enderecoAtual = partes.join(', ');
-        }
-    }
 
     try {
         const inputs = form.querySelectorAll('input, select');
         const dados = {
             nome: inputs[0].value,
             telefone: inputs[3].value,
-            endereco: enderecoAtual,
+            profissao: inputs[6].value,
+            renda_mensal: rendaMensalFormatada
         };
 
-        const response = await fetch(`${API_BASE_URL}/usuario/${usuarioLogado.id_usuario}`, {
+        const response = await fetch(`${API_BASE_URL}/cliente/${idUsuario}/informacoes`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -384,6 +371,28 @@ function applyCEPMask(cep) {
         .replace(/(-\d{3})\d+?$/, '$1');
 }
 
+function applyBalanceMask(value) {
+    if (value === undefined || value === null) return '';
+
+    const digits = String(value).replace(/\D/g, '');
+    if (!digits) return '';
+
+    const cents = parseInt(digits, 10);
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    }).format(cents / 100);
+}
+
+function parseBalanceToDouble(value) {
+    if (!value) return 0;
+
+    return Number(
+        value.replace(/[R$\s.]/g, '')
+            .replace(',', '.')
+    );
+}
+
 function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
@@ -423,6 +432,10 @@ document.addEventListener('DOMContentLoaded', function () {
         e.target.value = applyCEPMask(e.target.value);
     });
 
+    document.getElementById('rendaMensal').addEventListener('input', function (e) {
+        e.target.value = applyBalanceMask(e.target.value);
+    });
+
     document.getElementById('cep') && document.getElementById('cep').addEventListener('blur', function () {
         const cep = this.value.replace(/\D/g, '');
         if (cep.length === 8) {
@@ -441,7 +454,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         const estadoSelect = document.getElementById('estado');
                         if (estadoSelect) estadoSelect.value = data.uf || '';
 
-                        console.log('Endereço preenchido pelo CEP:', data);
                     }
                 })
                 .catch(error => console.log('Erro ao buscar CEP: ', error));
