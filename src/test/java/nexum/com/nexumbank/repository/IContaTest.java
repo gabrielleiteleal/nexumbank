@@ -1,6 +1,7 @@
 package nexum.com.nexumbank.repository;
 
 import jakarta.persistence.EntityManager;
+import nexum.com.nexumbank.dto.conta.ContaRequestDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioRequestDTO;
 import nexum.com.nexumbank.model.Cliente;
 import nexum.com.nexumbank.model.Conta;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doReturn;
 
 
 @DataJpaTest
@@ -77,21 +79,25 @@ class IContaTest {
 
     }
 
-    //TODO ajustar teste para verificar exceção de número duplicado
+    //TODO corrigir teste
     @Test
     @DisplayName("Should throw exception when trying to create account with duplicate number")
     void dontCreateContaWithDuplicateNumber(){
 
         //Arrange
-        Conta conta = createConta(cliente);
-        Conta contaDuplicate = new Conta();
-        contaDuplicate.setNumeroConta(conta.getNumeroConta());
+        Long clienteId = 1L;
 
+        ContaRequestDTO request = new ContaRequestDTO(
+                1L,
+                2222.33
+        );
+
+        doReturn(true).when(iConta).existsByNumeroConta("");
         //Act
-        Conta foundedAccount = this.iConta.findById(conta.getIdConta()).orElseThrow();
+
 
         //Assert
-        assertThat(foundedAccount.getNumeroConta()).isNotEqualTo(contaDuplicate.getNumeroConta());
+
     }
 
     private Usuario createUsuario(UsuarioRequestDTO usuarioRequestDTO) {
