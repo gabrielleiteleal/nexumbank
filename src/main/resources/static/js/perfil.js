@@ -111,6 +111,13 @@ function extrairEndereco(enderecoCompleto) {
 
 async function saveAddress() {
     const usuarioLogado = verificarAutenticacao();
+    const idUsuario = usuarioLogado.id_usuario;
+    let conta = null;
+    if (idUsuario) {
+        conta = await carregarDadosConta(usuarioLogado.id_conta);
+    }
+    const idConta = conta.id_conta;
+
     const saveButton = document.querySelector('button[onclick="saveAddress()"]');
 
     let addressEdited = '';
@@ -140,7 +147,7 @@ async function saveAddress() {
     console.log(endereco);
 
     try {
-        const response = await fetch(`http://localhost:8080/usuario/${usuarioLogado.id_usuario}/endereco`, {
+        const response = await fetch(`http://localhost:8080/usuario/${idUsuario}/${idConta}/endereco`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -178,6 +185,7 @@ function preencherDadosPerfil(usuario, cliente, conta) {
         el.textContent = usuario.nome;
     });
 
+    //TODO delete this
     const nomePartes = usuario.nome.split(' ');
     const iniciais = (nomePartes[0]?.charAt(0) || '') + (nomePartes[nomePartes.length - 1]?.charAt(0) || '');
 
@@ -296,6 +304,8 @@ async function inicializarPagina() {
     }
 }
 
+
+//TODO finalizar informações pessoais
 async function editarInformacoesPessoais() {
     const usuarioLogado = verificarAutenticacao();
     if (!usuarioLogado) return;
@@ -368,6 +378,12 @@ function applyPhoneMask(phone) {
         .replace(/(-\d{4})\d+?$/, '$1');
 }
 
+function applyCEPMask(cep) {
+    return cep.replace(/\D/g, '')
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .replace(/(-\d{3})\d+?$/, '$1');
+}
+
 function showNotification(message, type = 'success') {
     const notification = document.createElement('div');
     notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
@@ -396,9 +412,39 @@ function confirmLogout() {
 }
 
 document.addEventListener('DOMContentLoaded', inicializarPagina);
+
 document.addEventListener('DOMContentLoaded', function () {
+
     document.getElementById('telefone').addEventListener('input', function (e) {
         e.target.value = applyPhoneMask(e.target.value);
     });
-});
 
+    document.getElementById('cep').addEventListener('input', function (e) {
+        e.target.value = applyCEPMask(e.target.value);
+    });
+
+    document.getElementById('cep') && document.getElementById('cep').addEventListener('blur', function () {
+        const cep = this.value.replace(/\D/g, '');
+        if (cep.length === 8) {
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.erro) {
+                        const addressForm = document.getElementById('addressForm');
+                        if (addressForm) {
+                            const inputs = addressForm.querySelectorAll('input');
+                            if (inputs[4]) inputs[4].value = data.localidade || '';
+                            if (inputs[5]) inputs[5].value = this.value || '';
+                            if (inputs[6]) inputs[6].value = data.uf.value || '';
+                        }
+
+                        const estadoSelect = document.getElementById('estado');
+                        if (estadoSelect) estadoSelect.value = data.uf || '';
+
+                        console.log('Endereço preenchido pelo CEP:', data);
+                    }
+                })
+                .catch(error => console.log('Erro ao buscar CEP: ', error));
+        }
+    })
+});
