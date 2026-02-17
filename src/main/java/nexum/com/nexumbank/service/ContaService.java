@@ -11,6 +11,7 @@ import nexum.com.nexumbank.exception.SaldoInvalido;
 import nexum.com.nexumbank.model.Cliente;
 import nexum.com.nexumbank.model.Conta;
 import nexum.com.nexumbank.model.Usuario;
+import nexum.com.nexumbank.model.enums.Estado;
 import nexum.com.nexumbank.model.enums.StatusConta;
 import nexum.com.nexumbank.repository.ICliente;
 import nexum.com.nexumbank.repository.IConta;
@@ -42,6 +43,15 @@ public class ContaService {
         conta.setAgencia(cliente.getUsuario().getEstado().getNumeroEstado());
         conta.setCliente(cliente);
         conta.setStatusConta(StatusConta.Ativo);
+        repository.save(conta);
+    }
+
+    public void atualizarContaEAgencia(Long idConta, Estado estado) {
+        Conta conta = repository.findById(idConta).orElseThrow(() -> new ContaNaoEncontrada("Conta não encontrada. Id: " + idConta));
+
+        conta.setAgencia(estado.getNumeroEstado());
+        conta.setNumeroConta(gerarNumeroConta());
+
         repository.save(conta);
     }
 
@@ -96,15 +106,15 @@ public class ContaService {
                 conta.getSaldo(), clienteDTO, conta.getStatusConta().name(), conta.getDataCriacao());
     }
 
-//    public Conta toEntity(ContaResponseDTO contaResponseDTO) {
-//        Conta conta = new Conta();
-//        conta.setIdConta(contaResponseDTO.id_conta());
-//        conta.setNumeroConta(contaResponseDTO.numero_conta());
-//        conta.setAgencia(contaResponseDTO.agencia());
-//        conta.setSaldo(contaResponseDTO.saldo());
-//        conta.setStatusConta(StatusConta.valueOf(contaResponseDTO.status_conta()));
-//        conta.setDataCriacao(contaResponseDTO.data_criacao());
-//        return conta;
-//    }
+    public Conta toEntity(ContaResponseDTO contaResponseDTO) {
+        Conta conta = new Conta();
+        conta.setIdConta(contaResponseDTO.id_conta());
+        conta.setNumeroConta(contaResponseDTO.numero_conta());
+        conta.setAgencia(contaResponseDTO.agencia());
+        conta.setSaldo(contaResponseDTO.saldo());
+        conta.setStatusConta(StatusConta.valueOf(contaResponseDTO.status_conta()));
+        conta.setDataCriacao(contaResponseDTO.data_criacao());
+        return conta;
+    }
 
 }

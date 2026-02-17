@@ -35,9 +35,9 @@ public class UsuarioController {
         return ResponseEntity.status(201).body(usuarioService.editarUsuario(id, usuarioRequestDTO));
     }
 
-    @PutMapping("/{id}/endereco")
-    public ResponseEntity<UsuarioResponseDTO> editarEndereco(@PathVariable Long id, @RequestBody AddressRequestDTO addressRequestDTO){
-        return ResponseEntity.status(201).body(usuarioService.editarEndereco(id, addressRequestDTO));
+    @PutMapping("/{idUsuario}/{idConta}/endereco")
+    public ResponseEntity<UsuarioResponseDTO> editarEndereco(@PathVariable Long idUsuario, @PathVariable Long idConta, @RequestBody AddressRequestDTO addressRequestDTO){
+        return ResponseEntity.status(201).body(usuarioService.editarEndereco(idUsuario, idConta, addressRequestDTO));
     }
 
     @DeleteMapping("/{id}")

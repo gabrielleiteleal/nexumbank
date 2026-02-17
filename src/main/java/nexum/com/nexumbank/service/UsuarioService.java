@@ -8,6 +8,7 @@ import nexum.com.nexumbank.exception.EmailJaCadastrado;
 import nexum.com.nexumbank.exception.SenhaIncorreta;
 import nexum.com.nexumbank.exception.UsuarioNaoEncontrado;
 import nexum.com.nexumbank.model.Usuario;
+import nexum.com.nexumbank.model.enums.Estado;
 import nexum.com.nexumbank.model.enums.TipoUsuario;
 import nexum.com.nexumbank.repository.IUsuario;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,7 @@ public class UsuarioService {
     private final IUsuario repository;
     private final ClienteService clienteService;
     private final PasswordEncoder passwordEncoder;
+    private final ContaService contaService;
 
     public List<UsuarioResponseDTO> listarUsuarios() {
         return repository.findAll().stream().map(this::toDTO).toList();
@@ -60,10 +62,13 @@ public class UsuarioService {
         return toDTO(usuario);
     }
 
-    public UsuarioResponseDTO editarEndereco(Long id, AddressRequestDTO addressRequestDTO){
-        Usuario usuario = repository.findById(id).orElseThrow(() -> new UsuarioNaoEncontrado("Usuário não encontrado. Id: " + id));
+    public UsuarioResponseDTO editarEndereco(Long idUsuario, Long idConta, AddressRequestDTO addressRequestDTO){
+        Usuario usuario = repository.findById(idUsuario).orElseThrow(() -> new UsuarioNaoEncontrado("Usuário não encontrado. Id: " + idUsuario));
         usuario.setEndereco(addressRequestDTO.endereco());
         usuario.setEstado(addressRequestDTO.estado());
+        Estado estado = usuario.getEstado();
+
+        contaService.atualizarContaEAgencia(idConta, estado);
 
         repository.save(usuario);
         return toDTO(usuario);
