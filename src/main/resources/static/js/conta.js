@@ -100,40 +100,46 @@ function setupToggleVisibility(toggleId, valueId, hiddenId, iconId) {
 
 async function setUserBalance() {
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/conta`, {
-            method: 'GET'
-        });
+    const usuario = verificarAutenticacao();
 
-        if (!response.ok) {
-            let errorMsg = "Erro ao buscar a conta";
-            try {
-                const errorData = await response.json();
-                errorMsg = errorData?.message || errorMsg;
-            } catch (e) {
-            }
-            throw new Error(errorMsg);
-        }
+    const conta = await carregarDadosConta(usuario.id_usuario);
 
-        const data = await response.json();
+    return conta.saldo;
 
-        let balance = null;
-        if (Array.isArray(data) && data.length > 0) {
-            balance = data[0]?.saldo ?? null;
-        } else if (data && typeof data === 'object') {
-            balance = data.saldo ?? null;
-        }
-
-        if (balance === null || balance === undefined) {
-            throw new Error('Saldo não encontrado no retorno da API');
-        }
-
-        console.log(balance);
-        return balance;
-
-    } catch (erro) {
-        throw erro;
-    }
+    // try {
+    //     const response = await fetch(`${API_BASE_URL}/conta`, {
+    //         method: 'GET'
+    //     });
+    //
+    //     if (!response.ok) {
+    //         let errorMsg = "Erro ao buscar a conta";
+    //         try {
+    //             const errorData = await response.json();
+    //             errorMsg = errorData?.message || errorMsg;
+    //         } catch (e) {
+    //         }
+    //         throw new Error(errorMsg);
+    //     }
+    //
+    //     const data = await response.json();
+    //
+    //     let balance = null;
+    //     if (Array.isArray(data) && data.length > 0) {
+    //         balance = data[0]?.saldo ?? null;
+    //     } else if (data && typeof data === 'object') {
+    //         balance = data.saldo ?? null;
+    //     }
+    //
+    //     if (balance === null || balance === undefined) {
+    //         throw new Error('Saldo não encontrado no retorno da API');
+    //     }
+    //
+    //     console.log(balance);
+    //     return balance;
+    //
+    // } catch (erro) {
+    //     throw erro;
+    // }
 
 }
 
