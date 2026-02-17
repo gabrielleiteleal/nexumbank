@@ -2,6 +2,7 @@ package nexum.com.nexumbank.service;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import nexum.com.nexumbank.dto.cliente.ClienteInformacoesPessoais;
 import nexum.com.nexumbank.dto.cliente.ClienteProfissaoERenda;
 import nexum.com.nexumbank.dto.cliente.ClienteResponseDTO;
 import nexum.com.nexumbank.dto.usuario.UsuarioResponseDTO;
@@ -9,6 +10,7 @@ import nexum.com.nexumbank.exception.ClienteNaoEncontrado;
 import nexum.com.nexumbank.model.Cliente;
 import nexum.com.nexumbank.model.Usuario;
 import nexum.com.nexumbank.repository.ICliente;
+import nexum.com.nexumbank.repository.IUsuario;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,7 @@ import java.util.List;
 public class ClienteService {
 
     private final ICliente repository;
+    private final IUsuario usuarioRepository;
     private final ContaService contaService;
     private final PasswordEncoder passwordEncoder;
 
@@ -50,6 +53,21 @@ public class ClienteService {
         cliente.setRendaMensal(clienteProfissaoERenda.renda_mensal());
         repository.save(cliente);
     }
+
+    public void editarInformacoesPessoais(Long idCliente, ClienteInformacoesPessoais clienteInformacoesPessoais) {
+        Cliente cliente = repository.findById(idCliente).orElseThrow(() -> new ClienteNaoEncontrado("Cliente não encontrado. Id: " + idCliente));
+        Usuario usuario = cliente.getUsuario();
+
+        usuario.setNome(clienteInformacoesPessoais.nome());
+        usuario.setTelefone(clienteInformacoesPessoais.telefone());
+
+        cliente.setProfissao(clienteInformacoesPessoais.profissao());
+        cliente.setRendaMensal(clienteInformacoesPessoais.renda_mensal());
+
+        usuarioRepository.save(usuario);
+        repository.save(cliente);
+    }
+
 
     private UsuarioResponseDTO usuarioToDTO(Usuario usuario) {
         return new UsuarioResponseDTO(usuario.getIdUsuario().toString(), usuario.getNome(), usuario.getCpfCnpj(), usuario.getEmail(), usuario.getTelefone(), usuario.getEndereco(), usuario.getEstado().toString(), usuario.getTipoUsuario().toString(), usuario.getDataNascimento().toString());

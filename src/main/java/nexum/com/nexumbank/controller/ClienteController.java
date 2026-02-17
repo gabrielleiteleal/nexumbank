@@ -1,6 +1,7 @@
 package nexum.com.nexumbank.controller;
 
 import lombok.AllArgsConstructor;
+import nexum.com.nexumbank.dto.cliente.ClienteInformacoesPessoais;
 import nexum.com.nexumbank.dto.cliente.ClienteProfissaoERenda;
 import nexum.com.nexumbank.dto.cliente.ClienteResponseDTO;
 import nexum.com.nexumbank.service.ClienteService;
@@ -34,10 +35,9 @@ public class ClienteController {
         return ResponseEntity.status(200).body(true);
     }
 
-    //TODO - Implementar o editar Profissao e Renda
-    @PutMapping("profissao-renda")
-    public ResponseEntity<Boolean> editarProfissaoERenda(@RequestBody ClienteProfissaoERenda clienteProfissaoERenda) {
-        clienteService.adicionarProfissaoERenda(clienteProfissaoERenda);
+    @PutMapping("/{idCliente}/informacoes")
+    public ResponseEntity<Boolean> editarInformacoesPessoais(@PathVariable Long idCliente, @RequestBody ClienteInformacoesPessoais clienteInformacoesPessoais) {
+        clienteService.editarInformacoesPessoais(idCliente, clienteInformacoesPessoais);
         return ResponseEntity.status(200).body(true);
     }
 
