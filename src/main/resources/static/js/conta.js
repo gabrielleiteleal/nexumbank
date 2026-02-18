@@ -4,6 +4,39 @@ const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebar = document.querySelector('.sidebar');
 const overlay = document.getElementById('sidebarOverlay');
 
+async function inicializarPagina() {
+    document.body.style.opacity = '0.7';
+
+    const usuarioLogado = verificarAutenticacao();
+    if (!usuarioLogado) return;
+
+    try {
+        const usuario = await carregarDadosUsuario(usuarioLogado.id_usuario);
+        if (!usuario) {
+            showNotification('Erro ao carregar dados do usuário', 'danger');
+            return;
+        }
+
+        let cliente = null;
+        if (usuarioLogado.id_cliente) {
+            cliente = await carregarDadosCliente(usuarioLogado.id_cliente);
+        }
+
+        let conta = null;
+        if (usuarioLogado.id_conta) {
+            conta = await carregarDadosConta(usuarioLogado.id_conta);
+        }
+
+        console.log('Dados carregados:', {usuario, cliente, conta});
+
+    } catch (error) {
+        console.error('Erro ao inicializar página:', error);
+        showNotification('Erro ao carregar dados do perfil', 'danger');
+    } finally {
+        document.body.style.opacity = '1';
+    }
+}
+
 function verificarAutenticacao() {
     const usuario = JSON.parse(sessionStorage.getItem('usuario'));
     if (!usuario) {
@@ -41,6 +74,38 @@ async function carregarDadosConta(idConta) {
         throw new Error('Erro ao buscar dados da conta' + errorResponse.message);
     }
     return await response.json();
+}
+
+function logout() {
+    const logoutModal = new bootstrap.Modal(document.getElementById('logoutModal'));
+    logoutModal.show();
+}
+
+function confirmLogout() {
+    sessionStorage.clear();
+    showNotification('Saindo da conta...', 'info');
+    setTimeout(() => {
+        window.location.href = 'index.html';
+    }, 1500);
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : type === 'danger' ? 'x-circle' : 'exclamation-triangle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
 function toggleSidebar() {
@@ -89,9 +154,7 @@ function setupToggleVisibility(toggleId, valueId, hiddenId, iconId) {
 }
 
 async function setUserBalance() {
-
     const usuario = verificarAutenticacao();
-
     const conta = await carregarDadosConta(usuario.id_usuario);
 
     return conta.saldo;
@@ -198,6 +261,8 @@ function formatCurrency(value) {
         currency: 'BRL'
     }).format(value);
 }
+
+window.addEventListener('DOMContentLoaded', inicializarPagina)
 
 window.addEventListener('DOMContentLoaded', () => {
     loadBalanceAndAgencyNumber();
