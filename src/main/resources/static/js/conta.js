@@ -1,54 +1,5 @@
 const API_BASE_URL = 'http://localhost:8080';
 
-function verificarAutenticacao() {
-    const usuario = JSON.parse(sessionStorage.getItem('usuario'));
-    if (!usuario) {
-        window.location.href = 'index.html';
-        return null;
-    }
-    return usuario;
-}
-
-async function carregarDadosUsuario(idUsuario) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/usuario/${idUsuario}`);
-        if (!response.ok) {
-            throw new Error('Erro ao buscar dados do usuário');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
-        showNotification('Erro ao carregar dados do usuário', 'danger');
-        return null;
-    }
-}
-
-async function carregarDadosCliente(idCliente) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/cliente/${idCliente}`);
-        if (!response.ok) {
-            throw new Error('Erro ao buscar dados do cliente');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Erro ao carregar dados do cliente:', error);
-        return null;
-    }
-}
-
-async function carregarDadosConta(idConta) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/conta/${idConta}`);
-        if (!response.ok) {
-            throw new Error('Erro ao buscar dados da conta');
-        }
-        return await response.json();
-    } catch (error) {
-        console.error('Erro ao carregar dados da conta:', error);
-        return null;
-    }
-}
-
 const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebar = document.querySelector('.sidebar');
 const overlay = document.getElementById('sidebarOverlay');
@@ -143,11 +94,9 @@ async function setUserBalance() {
 
 }
 
-async function loadBalanceAndAgencyNumber() {
+async function loadAndRenderBalance() {
     const balanceElement = document.getElementById('saldoValue');
-    const agencyNumberElement = document.getElementById('agencyNumber');
     if (!balanceElement) return;
-    if (!agencyNumberElement) return;
 
     try {
         const balance = await setUserBalance();
@@ -155,32 +104,6 @@ async function loadBalanceAndAgencyNumber() {
     } catch (error) {
         console.error('Erro ao carregar saldo:', error);
         balanceElement.textContent = 'R$ 0,00';
-    }
-
-    try {
-        agencyNumberElement.textContent = await setAgencyNumber();
-    } catch (error) {
-        console.error('Erro ao carregar agência:', error);
-        agencyNumberElement.textContent = '000-0';
-    }
-
-}
-
-async function loadClientInformation(){
-    const usuario = verificarAutenticacao();
-    document.getElementById('nome').textContent = usuario.nome;
-}
-
-//TODO delete this
-async function loadAndRenderAgencyNumber() {
-    const agencyNumberElement = document.getElementById('agencyNumber');
-    if (!agencyNumberElement) return;
-
-    try {
-        agencyNumberElement.textContent = await setAgencyNumber();
-    } catch (error) {
-        console.error('Erro ao carregar agência:', error);
-        agencyNumberElement.textContent = '000-0';
     }
 }
 
@@ -222,7 +145,17 @@ async function setAgencyNumber() {
     }
 }
 
+async function loadAndRenderAgencyNumber() {
+    const agencyNumberElement = document.getElementById('agencyNumber');
+    if (!agencyNumberElement) return;
 
+    try {
+        agencyNumberElement.textContent = await setAgencyNumber();
+    } catch (error) {
+        console.error('Erro ao carregar agência:', error);
+        agencyNumberElement.textContent = '000-0';
+    }
+}
 
 setupToggleVisibility('toggleSaldo', 'saldoValue', 'saldoHidden', 'saldoIcon');
 setupToggleVisibility('toggleInvestimentos', 'investimentosValue', 'investimentosHidden', 'investimentosIcon');
@@ -259,10 +192,8 @@ function formatCurrency(value) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    // loadAndRenderBalance();
-    loadBalanceAndAgencyNumber();
-    loadClientInformation();
-
+    loadAndRenderBalance();
+    loadAndRenderAgencyNumber()
 
     const refreshBtn = document.getElementById('refreshSaldo');
     if (refreshBtn) {
@@ -270,8 +201,7 @@ window.addEventListener('DOMContentLoaded', () => {
             refreshBtn.disabled = true;
             refreshBtn.classList.add('opacity-50');
             try {
-                await loadBalanceAndAgencyNumber();
-                await loadClientInformation();
+                await loadAndRenderBalance();
             } finally {
                 refreshBtn.disabled = false;
                 refreshBtn.classList.remove('opacity-50');
