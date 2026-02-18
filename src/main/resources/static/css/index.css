@@ -167,19 +167,19 @@ a.text-success:hover {
         height: 80px;
         padding: 0 20px !important;
     }
-    
+
     .logo img {
         width: 150px;
     }
-    
+
     .contadigital h3 {
         font-size: 20px !important;
     }
-    
+
     .card-body {
         padding: 2rem !important;
     }
-    
+
     .main-container {
         min-height: calc(100vh - 80px);
         padding-top: 1.5rem;
@@ -190,19 +190,19 @@ a.text-success:hover {
     .header {
         height: 70px;
     }
-    
+
     .logo img {
         width: 120px;
     }
-    
+
     .contadigital h3 {
         font-size: 18px !important;
     }
-    
+
     .card-body {
         padding: 1.5rem !important;
     }
-    
+
     .main-container {
         min-height: calc(100vh - 70px);
         padding-top: 1rem;
