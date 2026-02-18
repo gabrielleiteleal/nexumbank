@@ -92,7 +92,7 @@ public class ContaService {
     }
 
     private UsuarioResponseDTO usuarioToDTO(Usuario usuario) {
-        return new UsuarioResponseDTO(usuario.getIdUsuario().toString(), usuario.getNome(), usuario.getCpfCnpj(), usuario.getEmail(), usuario.getTelefone(), usuario.getEndereco(), usuario.getEstado().toString(), usuario.getTipoUsuario().toString(), usuario.getDataNascimento().toString());
+        return new UsuarioResponseDTO(usuario.getIdUsuario().toString(), usuario.getNome(), usuario.getCpfCnpj(), usuario.getEmail(), usuario.getTelefone(), usuario.getEndereco(), usuario.getEstado().toString(), usuario.getTipoUsuario().toString(), usuario.getDataNascimento().toString(), usuario.getDataCadastro().toString());
     }
 
     private ClienteResponseDTO clienteToDTO(Cliente cliente) {
