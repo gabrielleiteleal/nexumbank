@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+FRONTEND_INTEGRATION.md
+LOGIN_INTEGRATION.md
+PERFIL_INTEGRATION.md
