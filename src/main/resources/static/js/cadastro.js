@@ -4,70 +4,65 @@ const API_BASE_URL = 'http://localhost:8080';
 // Máscaras para campos
 function applyCPFMask(cpf) {
     return cpf.replace(/\D/g, '')
-             .replace(/(\d{3})(\d)/, '$1.$2')
-             .replace(/(\d{3})(\d)/, '$1.$2')
-             .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-             .replace(/(-\d{2})\d+?$/, '$1');
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+        .replace(/(-\d{2})\d+?$/, '$1');
 }
 
 function applyCEPMask(cep) {
     return cep.replace(/\D/g, '')
-             .replace(/(\d{5})(\d)/, '$1-$2')
-             .replace(/(-\d{3})\d+?$/, '$1');
+        .replace(/(\d{5})(\d)/, '$1-$2')
+        .replace(/(-\d{3})\d+?$/, '$1');
 }
 
 function applyPhoneMask(phone) {
     return phone.replace(/\D/g, '')
-               .replace(/(\d{2})(\d)/, '($1) $2')
-               .replace(/(\d{4})(\d)/, '$1-$2')
-               .replace(/(\d{4})-(\d)(\d{4})/, '$1$2-$3')
-               .replace(/(-\d{4})\d+?$/, '$1');
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2')
+        .replace(/(\d{4})-(\d)(\d{4})/, '$1$2-$3')
+        .replace(/(-\d{4})\d+?$/, '$1');
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('cpf').addEventListener('input', function(e) {
+function togglePasswordVisibility(element_1, element_2) {
+    const senhaInput = document.getElementById(`${element_1}`);
+    const toggleIcon = document.getElementById(`${element_2}`);
+
+    if (senhaInput && toggleIcon) {
+        if (senhaInput.type === 'password') {
+            senhaInput.type = 'text';
+            toggleIcon.classList.remove('bi-eye');
+            toggleIcon.classList.add('bi-eye-slash');
+        } else {
+            senhaInput.type = 'password';
+            toggleIcon.classList.remove('bi-eye-slash');
+            toggleIcon.classList.add('bi-eye');
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('cpf').addEventListener('input', function (e) {
         e.target.value = applyCPFMask(e.target.value);
     });
 
-    document.getElementById('cep').addEventListener('input', function(e) {
+    document.getElementById('cep').addEventListener('input', function (e) {
         e.target.value = applyCEPMask(e.target.value);
     });
 
-    document.getElementById('telefone').addEventListener('input', function(e) {
+    document.getElementById('telefone').addEventListener('input', function (e) {
         e.target.value = applyPhoneMask(e.target.value);
     });
 
-    document.getElementById('toggleSenha').addEventListener('click', function() {
-        const senhaInput = document.getElementById('senha');
-        const toggleIcon = document.getElementById('toggleSenhaIcon');
-
-        if (senhaInput.type === 'password') {
-            senhaInput.type = 'text';
-            toggleIcon.classList.remove('bi-eye');
-            toggleIcon.classList.add('bi-eye-slash');
-        } else {
-            senhaInput.type = 'password';
-            toggleIcon.classList.remove('bi-eye-slash');
-            toggleIcon.classList.add('bi-eye');
-        }
+    document.getElementById('toggleSenha').addEventListener('click', function () {
+        togglePasswordVisibility("senha", "toggleSenhaIcon");
     });
 
-    document.getElementById('toggleConfirmarSenha').addEventListener('click', function() {
-        const senhaInput = document.getElementById('confirmarSenha');
-        const toggleIcon = document.getElementById('toggleConfirmarSenhaIcon');
-
-        if (senhaInput.type === 'password') {
-            senhaInput.type = 'text';
-            toggleIcon.classList.remove('bi-eye');
-            toggleIcon.classList.add('bi-eye-slash');
-        } else {
-            senhaInput.type = 'password';
-            toggleIcon.classList.remove('bi-eye-slash');
-            toggleIcon.classList.add('bi-eye');
-        }
+    document.getElementById('toggleConfirmarSenha').addEventListener('click', function () {
+        togglePasswordVisibility("confirmarSenha", "toggleConfirmarSenhaIcon");
     });
 
-    document.getElementById('cep').addEventListener('blur', function() {
+    document.getElementById('cep').addEventListener('blur', function () {
         const cep = this.value.replace(/\D/g, '');
         if (cep.length === 8) {
             fetch(`https://viacep.com.br/ws/${cep}/json/`)
@@ -86,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('confirmarEmail').addEventListener('input', function() {
+    document.getElementById('confirmarEmail').addEventListener('input', function () {
         const email = document.getElementById('email').value;
         const confirmarEmail = this.value;
 
@@ -97,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    document.getElementById('confirmarSenha').addEventListener('input', function() {
+    document.getElementById('confirmarSenha').addEventListener('input', function () {
         const senha = document.getElementById('senha').value;
         const confirmarSenha = this.value;
 
@@ -216,13 +211,13 @@ function mostrarMensagemErro(mensagem) {
     modal.show();
 }
 
-(function() {
+(function () {
     'use strict';
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
         const forms = document.getElementsByClassName('needs-validation');
 
-        Array.prototype.filter.call(forms, function(form) {
-            form.addEventListener('submit', async function(event) {
+        Array.prototype.filter.call(forms, function (form) {
+            form.addEventListener('submit', async function (event) {
                 event.preventDefault();
                 event.stopPropagation();
 
