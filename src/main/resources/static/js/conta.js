@@ -155,9 +155,11 @@ function setupToggleVisibility(toggleId, valueId, hiddenId, iconId) {
 
 async function setUserBalance() {
     const usuario = verificarAutenticacao();
-    const conta = await carregarDadosConta(usuario.id_usuario);
+    if (!usuario) throw new Error('Usuário não autenticado');
+    if (!usuario.id_conta) throw new Error('Conta do usuário não encontrada');
 
-    return conta.saldo;
+    const conta = await carregarDadosConta(usuario.id_conta);
+    return conta?.saldo ?? 0;
 
 }
 
@@ -199,12 +201,6 @@ async function setAgencyNumber() {
         if (!response.ok) {
             let errorMsg = "Erro ao buscar a conta";
             throw new Error(errorMsg);
-            // try {
-            //     const errorData = await response.json();
-            //     errorMsg = errorData?.message || errorMsg;
-            // } catch (e) {
-            // }
-            // throw new Error(errorMsg);
         }
 
         const data = await response.json();
@@ -227,6 +223,108 @@ async function setAgencyNumber() {
         throw erro;
     }
 }
+
+function parseBRLToNumber(brl) {
+    if (!brl) return 0;
+    const cleaned = brl.replace(/[^.\d,]/g, '').replace(/\./g, '');
+    const normalized = cleaned.replace(/,/g, '.');
+    const parsed = parseFloat(normalized);
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function formatNumberToBRLInput(value) {
+    const number = Number(value) || 0;
+    return new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(number);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const addBalanceBtn = document.getElementById('addBalanceBtn');
+    const addBalanceModalElem = document.getElementById('addBalanceModal');
+    const addBalanceValueInput = document.getElementById('addBalanceValue');
+    const addBalanceForm = document.getElementById('addBalanceForm');
+
+    let addBalanceModal = null;
+    if (addBalanceModalElem) addBalanceModal = new bootstrap.Modal(addBalanceModalElem);
+
+    if (addBalanceBtn && addBalanceModal) {
+        addBalanceBtn.addEventListener('click', () => {
+            if (addBalanceValueInput) addBalanceValueInput.value = '';
+            addBalanceModal.show();
+        });
+    }
+
+    if (addBalanceValueInput) {
+        addBalanceValueInput.addEventListener('input', (e) => {
+            const raw = e.target.value;
+            const digits = raw.replace(/\D/g, '');
+            if (digits.length === 0) {
+                e.target.value = '';
+                return;
+            }
+            const cents = digits.padStart(3, '0');
+            const integerPart = cents.slice(0, -2);
+            const decimalPart = cents.slice(-2);
+            e.target.value = new Intl.NumberFormat('pt-BR').format(Number(integerPart)) + ',' + decimalPart;
+        });
+
+        addBalanceValueInput.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            e.target.value = text.replace(/\D/g, '');
+        });
+    }
+
+    if (addBalanceForm) {
+        addBalanceForm.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            try {
+                const usuario = verificarAutenticacao();
+                if (!usuario) throw new Error('Usuário não autenticado');
+                const id_cliente = usuario.id_cliente;
+                if (!id_cliente) throw new Error('Cliente não vinculado ao usuário');
+
+                const rawValue = addBalanceValueInput ? addBalanceValueInput.value : '';
+                const amount = parseBRLToNumber(rawValue);
+                if (!amount || amount <= 0) {
+                    showNotification('Digite um valor válido para adicionar', 'danger');
+                    return;
+                }
+
+                const payload = {
+                    id_cliente: id_cliente,
+                    saldo: amount
+                };
+
+                const response = await fetch(`${API_BASE_URL}/conta/depositar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    const message = err.message || 'Erro ao adicionar saldo';
+                    showNotification(message, 'danger');
+                    return;
+                }
+
+                const result = await response.json();
+                if (result === true) {
+                    showNotification('Saldo adicionado com sucesso', 'success');
+                    if (addBalanceModal) addBalanceModal.hide();
+                    await loadBalanceAndAgencyNumber();
+                    await loadClientInformation();
+                } else {
+                    showNotification('Não foi possível adicionar o saldo', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Erro ao adicionar saldo:', error);
+                showNotification(error.message || 'Erro ao adicionar saldo', 'danger');
+            }
+        });
+    }
+});
 
 setupToggleVisibility('toggleSaldo', 'saldoValue', 'saldoHidden', 'saldoIcon');
 setupToggleVisibility('toggleInvestimentos', 'investimentosValue', 'investimentosHidden', 'investimentosIcon');
@@ -295,3 +393,4 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+

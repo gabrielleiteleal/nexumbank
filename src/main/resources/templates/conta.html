@@ -123,6 +123,10 @@
                                                 id="refreshSaldo" title="Atualizar saldo">
                                             <i class="bi bi-arrow-clockwise fs-5"></i>
                                         </button>
+                                        <button class="btn btn-link text-white p-0 border-0 bg-transparent ms-2"
+                                                id="addBalanceBtn" title="Adicionar saldo">
+                                            <i class="bi bi-plus-circle-fill fs-5"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <i class="bi bi-wallet2 fs-2 opacity-50"></i>
@@ -387,6 +391,30 @@
                     <i class="bi bi-box-arrow-right me-1"></i>Sair da Conta
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addBalanceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Saldo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addBalanceForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="addBalanceValue" class="form-label">Valor (R$)</label>
+                        <input type="text" class="form-control" id="addBalanceValue" placeholder="0,00" required>
+                        <div class="form-text">Digite o valor que deseja adicionar à conta. Ex: 150,00</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="addBalanceSubmit">Adicionar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
