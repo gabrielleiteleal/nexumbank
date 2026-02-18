@@ -181,15 +181,26 @@ async function saveAddress() {
 }
 
 function preencherDadosPerfil(usuario, cliente, conta) {
-    document.querySelectorAll('.user-info .fw-semibold').forEach(el => {
-        el.textContent = usuario.nome;
-    });
-
     //TODO será usado em cartões/pix
     const nomePartes = usuario.nome.split(' ');
     const iniciais = (nomePartes[0]?.charAt(0) || '') + (nomePartes[nomePartes.length - 1]?.charAt(0) || '');
 
+    const dateString = usuario.data_cadastro;
+    const dateFormatted = new Date(dateString).toLocaleDateString('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    document.querySelectorAll('.user-info .fw-semibold').forEach(el => {
+        el.textContent = usuario.nome;
+    });
+
+
     document.querySelector('.profile-picture + h4').textContent = usuario.nome;
+    document.getElementById('dataCadastro').textContent = dateFormatted;
+    document.getElementById('alteracaoSenha').textContent = "Última alteração: " + dateFormatted;
+    console.log("Data cadastro: " + dateFormatted);
 
     if (conta) {
         document.querySelector('.account-info .col-4 .fw-bold').textContent = conta.agencia;
