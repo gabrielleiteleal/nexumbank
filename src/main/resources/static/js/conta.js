@@ -4,6 +4,45 @@ const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebar = document.querySelector('.sidebar');
 const overlay = document.getElementById('sidebarOverlay');
 
+function verificarAutenticacao() {
+    const usuario = JSON.parse(sessionStorage.getItem('usuario'));
+    if (!usuario) {
+        window.location.href = 'index.html';
+        return null;
+    }
+    return usuario;
+}
+
+async function carregarDadosUsuario(idUsuario) {
+    const response = await fetch(`${API_BASE_URL}/usuario/${idUsuario}`);
+    if (!response.ok) {
+        const errorResponse = await response.json();
+        showNotification('Erro ao carregar dados do usuário', 'danger');
+        throw new Error('Erro ao buscar dados do usuário' + errorResponse.message);
+    }
+    return await response.json();
+}
+
+async function carregarDadosCliente(idCliente) {
+    const response = await fetch(`${API_BASE_URL}/cliente/${idCliente}`);
+    if (!response.ok) {
+        const errorResponse = await response.json();
+        showNotification('Erro ao carregar dados do cliente', 'danger');
+        throw new Error('Erro ao buscar dados do cliente' + errorResponse.message);
+    }
+    return await response.json();
+}
+
+async function carregarDadosConta(idConta) {
+    const response = await fetch(`${API_BASE_URL}/conta/${idConta}`);
+    if (!response.ok) {
+        const errorResponse = await response.json();
+        showNotification('Erro ao carregar dados da conta', 'danger');
+        throw new Error('Erro ao buscar dados da conta' + errorResponse.message);
+    }
+    return await response.json();
+}
+
 function toggleSidebar() {
     sidebar.classList.toggle('show');
     overlay.classList.toggle('show');
@@ -57,46 +96,13 @@ async function setUserBalance() {
 
     return conta.saldo;
 
-    // try {
-    //     const response = await fetch(`${API_BASE_URL}/conta`, {
-    //         method: 'GET'
-    //     });
-    //
-    //     if (!response.ok) {
-    //         let errorMsg = "Erro ao buscar a conta";
-    //         try {
-    //             const errorData = await response.json();
-    //             errorMsg = errorData?.message || errorMsg;
-    //         } catch (e) {
-    //         }
-    //         throw new Error(errorMsg);
-    //     }
-    //
-    //     const data = await response.json();
-    //
-    //     let balance = null;
-    //     if (Array.isArray(data) && data.length > 0) {
-    //         balance = data[0]?.saldo ?? null;
-    //     } else if (data && typeof data === 'object') {
-    //         balance = data.saldo ?? null;
-    //     }
-    //
-    //     if (balance === null || balance === undefined) {
-    //         throw new Error('Saldo não encontrado no retorno da API');
-    //     }
-    //
-    //     console.log(balance);
-    //     return balance;
-    //
-    // } catch (erro) {
-    //     throw erro;
-    // }
-
 }
 
-async function loadAndRenderBalance() {
+async function loadBalanceAndAgencyNumber() {
     const balanceElement = document.getElementById('saldoValue');
+    const agencyNumberElement = document.getElementById('agencyNumber');
     if (!balanceElement) return;
+    if (!agencyNumberElement) return;
 
     try {
         const balance = await setUserBalance();
@@ -105,6 +111,19 @@ async function loadAndRenderBalance() {
         console.error('Erro ao carregar saldo:', error);
         balanceElement.textContent = 'R$ 0,00';
     }
+
+    try {
+        agencyNumberElement.textContent = await setAgencyNumber();
+    } catch (error) {
+        console.error('Erro ao carregar agência:', error);
+        agencyNumberElement.textContent = '000-0';
+    }
+
+}
+
+async function loadClientInformation() {
+    const usuario = verificarAutenticacao();
+    document.getElementById('nome').textContent = usuario.nome;
 }
 
 async function setAgencyNumber() {
@@ -116,12 +135,13 @@ async function setAgencyNumber() {
 
         if (!response.ok) {
             let errorMsg = "Erro ao buscar a conta";
-            try {
-                const errorData = await response.json();
-                errorMsg = errorData?.message || errorMsg;
-            } catch (e) {
-            }
             throw new Error(errorMsg);
+            // try {
+            //     const errorData = await response.json();
+            //     errorMsg = errorData?.message || errorMsg;
+            // } catch (e) {
+            // }
+            // throw new Error(errorMsg);
         }
 
         const data = await response.json();
@@ -142,18 +162,6 @@ async function setAgencyNumber() {
 
     } catch (erro) {
         throw erro;
-    }
-}
-
-async function loadAndRenderAgencyNumber() {
-    const agencyNumberElement = document.getElementById('agencyNumber');
-    if (!agencyNumberElement) return;
-
-    try {
-        agencyNumberElement.textContent = await setAgencyNumber();
-    } catch (error) {
-        console.error('Erro ao carregar agência:', error);
-        agencyNumberElement.textContent = '000-0';
     }
 }
 
@@ -192,8 +200,8 @@ function formatCurrency(value) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    loadAndRenderBalance();
-    loadAndRenderAgencyNumber()
+    loadBalanceAndAgencyNumber();
+    loadClientInformation();
 
     const refreshBtn = document.getElementById('refreshSaldo');
     if (refreshBtn) {
@@ -201,7 +209,8 @@ window.addEventListener('DOMContentLoaded', () => {
             refreshBtn.disabled = true;
             refreshBtn.classList.add('opacity-50');
             try {
-                await loadAndRenderBalance();
+                await loadBalanceAndAgencyNumber();
+                await loadClientInformation();
             } finally {
                 refreshBtn.disabled = false;
                 refreshBtn.classList.remove('opacity-50');

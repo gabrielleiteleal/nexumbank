@@ -120,8 +120,9 @@
                                     </button>
                                 </div>
                             </div>
-                            <h4 class="text-primary fw-bold mb-1">João Silva Santos</h4>
-                            <p class="text-muted mb-3">Cliente desde Janeiro 2023</p>
+                            <h4 class="text-primary fw-bold mb-1">Undefined</h4>
+                            <p class="text-muted mb-3">Cliente desde <span class="dataDadastro" id="dataCadastro">Janeiro 2020</span>
+                            </p>
 
                             <div class="d-flex justify-content-center mb-3">
                                     <span class="badge bg-success fs-6 py-2 px-3">
@@ -209,14 +210,16 @@
                                         <label class="form-label fw-semibold text-secondary">
                                             <i class="bi bi-briefcase me-2"></i>Profissão
                                         </label>
-                                        <input type="text" class="form-control" id="profissao" value="profissao" readonly>
+                                        <input type="text" class="form-control" id="profissao" value="profissao"
+                                               readonly>
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold text-secondary">
                                             <i class="bi bi-cash-stack me-2"></i>Renda Mensal
                                         </label>
-                                        <input type="text" class="form-control" id="rendaMensal" value="rendaMensal" readonly>
+                                        <input type="text" class="form-control" id="rendaMensal" value="rendaMensal"
+                                               readonly>
                                     </div>
                                 </div>
 
@@ -255,7 +258,8 @@
                                         <label class="form-label fw-semibold text-secondary">
                                             <i class="bi bi-house me-2"></i>Logradouro
                                         </label>
-                                        <input type="text" class="form-control" id="logradouro" value="Undefined" readonly>
+                                        <input type="text" class="form-control" id="logradouro" value="Undefined"
+                                               readonly>
                                     </div>
 
                                     <div class="col-md-3">
@@ -537,7 +541,7 @@
         const isEditing = !inputs[0].readOnly;
 
         inputs.forEach(input => {
-            if(input.id === 'estado'){
+            if (input.id === 'estado') {
                 return;
             }
             input.readOnly = isEditing;
