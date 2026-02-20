@@ -324,6 +324,198 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const transferBtns = document.querySelectorAll('.action-btn');
+    const transferModalElem = document.getElementById('transferModal');
+    const transferKeyTypeSelect = document.getElementById('transferKeyType');
+    const transferKeyInput = document.getElementById('transferKey');
+    const transferValueInput = document.getElementById('transferValue');
+    const transferForm = document.getElementById('transferForm');
+
+    let transferModal = null;
+    if (transferModalElem) transferModal = new bootstrap.Modal(transferModalElem);
+
+    if (transferBtns.length > 0 && transferModal) {
+        transferBtns[0].addEventListener('click', () => {
+            if (transferKeyTypeSelect) transferKeyTypeSelect.value = '';
+            if (transferKeyInput) transferKeyInput.value = '';
+            if (transferValueInput) transferValueInput.value = '';
+            transferModal.show();
+        });
+    }
+
+    if (transferValueInput) {
+        transferValueInput.addEventListener('input', (e) => {
+            const raw = e.target.value;
+            const digits = raw.replace(/\D/g, '');
+            if (digits.length === 0) {
+                e.target.value = '';
+                return;
+            }
+            const cents = digits.padStart(3, '0');
+            const integerPart = cents.slice(0, -2);
+            const decimalPart = cents.slice(-2);
+            e.target.value = new Intl.NumberFormat('pt-BR').format(Number(integerPart)) + ',' + decimalPart;
+        });
+
+        transferValueInput.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            e.target.value = text.replace(/\D/g, '');
+        });
+    }
+
+    if (transferKeyTypeSelect && transferKeyInput) {
+        transferKeyTypeSelect.addEventListener('change', () => {
+            const keyType = transferKeyTypeSelect.value;
+            transferKeyInput.value = '';
+
+            switch(keyType) {
+                case 'CPF':
+                    transferKeyInput.placeholder = '000.000.000-00';
+                    transferKeyInput.maxLength = 18;
+                    break;
+                case 'EMAIL':
+                    transferKeyInput.placeholder = 'exemplo@email.com';
+                    transferKeyInput.maxLength = 100;
+                    break;
+                case 'TELEFONE':
+                    transferKeyInput.placeholder = '(00) 00000-0000';
+                    transferKeyInput.maxLength = 15;
+                    break;
+                case 'CONTA':
+                    transferKeyInput.placeholder = 'Número da conta';
+                    transferKeyInput.maxLength = 20;
+                    break;
+                default:
+                    transferKeyInput.placeholder = 'Digite a chave do destinatário';
+            }
+        });
+    }
+
+    async function buscarContaPorChave(chave, tipoChave) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/cliente`);
+            if (!response.ok) throw new Error('Erro ao buscar clientes');
+
+            const clientes = await response.json();
+            let clienteEncontrado = null;
+
+            switch(tipoChave) {
+                case 'CPF':
+                    clienteEncontrado = clientes.find(c => c.cpf_cnpj === chave);
+                    break;
+                case 'EMAIL':
+                    clienteEncontrado = clientes.find(c => c.email === chave);
+                    break;
+                case 'TELEFONE':
+                    clienteEncontrado = clientes.find(c => c.telefone === chave);
+                    break;
+                case 'CONTA':
+                    // Buscar diretamente pelo número da conta
+                    const contasResponse = await fetch(`${API_BASE_URL}/conta`);
+                    if (!contasResponse.ok) throw new Error('Erro ao buscar contas');
+                    const contas = await contasResponse.json();
+                    const conta = contas.find(c => c.numero_conta === chave);
+                    return conta ? conta.id_conta : null;
+            }
+
+            if (!clienteEncontrado) return null;
+
+            const contasResponse = await fetch(`${API_BASE_URL}/conta`);
+            if (!contasResponse.ok) throw new Error('Erro ao buscar contas');
+            const contas = await contasResponse.json();
+            const contaCliente = contas.find(c => c.id_cliente === clienteEncontrado.id_cliente);
+
+            return contaCliente ? contaCliente.id_conta : null;
+        } catch (error) {
+            console.error('Erro ao buscar conta:', error);
+            return null;
+        }
+    }
+
+    if (transferForm) {
+        transferForm.addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+
+            const submitBtn = document.getElementById('transferSubmit');
+            if (submitBtn) submitBtn.disabled = true;
+
+            try {
+                const usuario = verificarAutenticacao();
+                if (!usuario) throw new Error('Usuário não autenticado');
+                if (!usuario.id_conta) throw new Error('Conta não encontrada');
+
+                const keyType = transferKeyTypeSelect ? transferKeyTypeSelect.value : '';
+                const key = transferKeyInput ? transferKeyInput.value.trim() : '';
+                const rawValue = transferValueInput ? transferValueInput.value : '';
+                const amount = parseBRLToNumber(rawValue);
+
+                if (!keyType) {
+                    showNotification('Selecione o tipo de chave', 'danger');
+                    return;
+                }
+
+                if (!key) {
+                    showNotification('Digite a chave do destinatário', 'danger');
+                    return;
+                }
+
+                if (!amount || amount <= 0) {
+                    showNotification('Digite um valor válido para transferir', 'danger');
+                    return;
+                }
+
+                showNotification('Buscando destinatário...', 'info');
+                const contaDestino = await buscarContaPorChave(key, keyType);
+
+                if (!contaDestino) {
+                    showNotification('Destinatário não encontrado', 'danger');
+                    return;
+                }
+
+                if (contaDestino === usuario.id_conta) {
+                    showNotification('Você não pode transferir para si mesmo', 'danger');
+                    return;
+                }
+
+                const payload = {
+                    tipo_transacao: 'TRANSFERENCIA',
+                    valor: amount,
+                    conta_origem: usuario.id_conta,
+                    conta_destino: contaDestino
+                };
+
+                const response = await fetch(`${API_BASE_URL}/transacao/transferir`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    const message = err.message || 'Erro ao realizar transferência';
+                    showNotification(message, 'danger');
+                    return;
+                }
+
+                const result = await response.json();
+                if (result && result.id_trasacao) {
+                    showNotification('Transferência realizada com sucesso!', 'success');
+                    if (transferModal) transferModal.hide();
+                    await loadBalanceAndAgencyNumber();
+                } else {
+                    showNotification('Não foi possível realizar a transferência', 'danger');
+                }
+
+            } catch (error) {
+                console.error('Erro ao transferir:', error);
+                showNotification(error.message || 'Erro ao realizar transferência', 'danger');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        });
+    }
 });
 
 setupToggleVisibility('toggleSaldo', 'saldoValue', 'saldoHidden', 'saldoIcon');

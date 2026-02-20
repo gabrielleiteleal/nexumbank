@@ -419,6 +419,55 @@
     </div>
 </div>
 
+<div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-arrow-up-circle me-2"></i>Nova Transferência
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="transferForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="transferKeyType" class="form-label">Tipo de Chave</label>
+                        <select class="form-select" id="transferKeyType" required>
+                            <option value="" selected disabled>Selecione o tipo</option>
+                            <option value="CPF">CPF/CNPJ</option>
+                            <option value="EMAIL">E-mail</option>
+                            <option value="TELEFONE">Telefone</option>
+                            <option value="CONTA">Número da Conta</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transferKey" class="form-label">Chave do Destinatário</label>
+                        <input type="text" class="form-control" id="transferKey"
+                               placeholder="Digite a chave do destinatário" required>
+                        <div class="form-text">Insira o CPF, e-mail, telefone ou número da conta</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transferValue" class="form-label">Valor (R$)</label>
+                        <input type="text" class="form-control" id="transferValue"
+                               placeholder="0,00" required>
+                        <div class="form-text">Digite o valor que deseja transferir</div>
+                    </div>
+                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>A transferência será realizada instantaneamente</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="transferSubmit">
+                        <i class="bi bi-check-circle me-1"></i>Transferir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
