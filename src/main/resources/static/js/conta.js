@@ -237,6 +237,31 @@ function formatNumberToBRLInput(value) {
     return new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(number);
 }
 
+function applyCPFMask(cpf) {
+    return cpf.replace(/\D/g, '')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+        .replace(/(-\d{2})\d+?$/, '$1');
+}
+
+function applyCNPJMask(cnpj) {
+    return cnpj.replace(/\D/g, '')
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})/, '$1-$2')
+        .replace(/(-\d{2})\d+?$/, '$1');
+}
+
+function applyCPFCNPJMask(value) {
+    const digits = (value || '').replace(/\D/g, '');
+    if (digits.length > 11) {
+        return applyCNPJMask(value);
+    }
+    return applyCPFMask(value);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     const addBalanceBtn = document.getElementById('addBalanceBtn');
     const addBalanceModalElem = document.getElementById('addBalanceModal');
@@ -325,6 +350,10 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+
     const transferBtns = document.querySelectorAll('.action-btn');
     const transferModalElem = document.getElementById('transferModal');
     const transferKeyTypeSelect = document.getElementById('transferKeyType');
@@ -370,10 +399,33 @@ window.addEventListener('DOMContentLoaded', () => {
             const keyType = transferKeyTypeSelect.value;
             transferKeyInput.value = '';
 
-            switch(keyType) {
+            transferKeyInput.oninput = null;
+            transferKeyInput.onpaste = null;
+
+            switch (keyType) {
                 case 'CPF':
                     transferKeyInput.placeholder = '000.000.000-00';
                     transferKeyInput.maxLength = 18;
+                    transferKeyInput.oninput = function (e) {
+                        e.target.value = applyCPFCNPJMask(e.target.value);
+                    };
+                    transferKeyInput.onpaste = function (e) {
+                        e.preventDefault();
+                        const text = (e.clipboardData || window.clipboardData).getData('text');
+                        e.target.value = applyCPFCNPJMask(text);
+                    };
+                    break;
+                case 'CNPJ':
+                    transferKeyInput.placeholder = '00.000.000/0000-00';
+                    transferKeyInput.maxLength = 20;
+                    transferKeyInput.oninput = function (e) {
+                        e.target.value = applyCPFCNPJMask(e.target.value);
+                    };
+                    transferKeyInput.onpaste = function (e) {
+                        e.preventDefault();
+                        const text = (e.clipboardData || window.clipboardData).getData('text');
+                        e.target.value = applyCPFCNPJMask(text);
+                    };
                     break;
                 case 'EMAIL':
                     transferKeyInput.placeholder = 'exemplo@email.com';
@@ -401,9 +453,32 @@ window.addEventListener('DOMContentLoaded', () => {
             const clientes = await response.json();
             let clienteEncontrado = null;
 
-            switch(tipoChave) {
+            switch (tipoChave) {
                 case 'CPF':
-                    clienteEncontrado = clientes.find(c => c.cpf_cnpj === chave);
+                    const normalizedKey = (chave || '').toString().replace(/\D/g, '').trim();
+                    const found = clientes.find(c => {
+                        const candidates = [
+                            c?.cpf_cnpj,
+                            c?.cpf,
+                            c?.cpfCnpj,
+                            c?.documento,
+                            c?.usuario?.cpf_cnpj,
+                            c?.usuario?.cpf,
+                            c?.usuario?.cpfCnpj,
+                            c?.usuario?.documento
+                        ];
+
+                        for (let cand of candidates) {
+                            if (cand === undefined || cand === null) continue;
+                            const raw = cand.toString().trim();
+                            const normalized = raw.replace(/\D/g, '');
+                            if (normalized && normalized === normalizedKey) return true;
+                        }
+                        return false;
+                    });
+
+                    console.log('Cliente encontrado na lista: ', found);
+                    clienteEncontrado = found || null;
                     break;
                 case 'EMAIL':
                     clienteEncontrado = clientes.find(c => c.email === chave);
@@ -412,7 +487,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     clienteEncontrado = clientes.find(c => c.telefone === chave);
                     break;
                 case 'CONTA':
-                    // Buscar diretamente pelo número da conta
                     const contasResponse = await fetch(`${API_BASE_URL}/conta`);
                     if (!contasResponse.ok) throw new Error('Erro ao buscar contas');
                     const contas = await contasResponse.json();
@@ -425,7 +499,21 @@ window.addEventListener('DOMContentLoaded', () => {
             const contasResponse = await fetch(`${API_BASE_URL}/conta`);
             if (!contasResponse.ok) throw new Error('Erro ao buscar contas');
             const contas = await contasResponse.json();
-            const contaCliente = contas.find(c => c.id_cliente === clienteEncontrado.id_cliente);
+            console.log("Lista de contas: ", contas);
+            console.log(clienteEncontrado);
+
+            const clientId = clienteEncontrado?.id_cliente
+                ?? clienteEncontrado?.usuario?.id_cliente
+                ?? clienteEncontrado?.usuario?.id_usuario
+                ?? clienteEncontrado?.usuario?.id
+                ?? null;
+
+            console.log("Id do Cliente (resolvido): ", clientId);
+
+            const contaCliente = contas.find(c =>
+                String(c.id_cliente ?? c.id_conta ?? c.numero_conta ?? '').trim() === String(clientId ?? '').trim()
+            );
+            console.log("Conta encontrada: ", contaCliente);
 
             return contaCliente ? contaCliente.id_conta : null;
         } catch (error) {
@@ -516,6 +604,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
 });
 
 setupToggleVisibility('toggleSaldo', 'saldoValue', 'saldoHidden', 'saldoIcon');
@@ -585,4 +674,3 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
-
