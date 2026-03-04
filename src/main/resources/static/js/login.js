@@ -8,8 +8,6 @@ function applyCPFMask(cpf) {
         .replace(/(-\d{2})\d+?$/, '$1');
 }
 
-//TODO make function to save Client data
-
 async function userLogin(cpf_cnpj, senha) {
 
     const response = await fetch(`${API_BASE_URL}/usuario/login`, {
@@ -31,7 +29,6 @@ async function userLogin(cpf_cnpj, senha) {
     return await response.json();
 }
 
-//back here
 function saveUserData(dadosUsuario) {
     sessionStorage.setItem('usuario', JSON.stringify(dadosUsuario));
     sessionStorage.setItem('isLoggedIn', 'true');
@@ -113,7 +110,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     togglePasswordVisibility();
 });
-
 
 (function () {
     'use strict';
