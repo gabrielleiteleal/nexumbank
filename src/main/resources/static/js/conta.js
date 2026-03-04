@@ -4,39 +4,6 @@ const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebar = document.querySelector('.sidebar');
 const overlay = document.getElementById('sidebarOverlay');
 
-async function inicializarPagina() {
-    document.body.style.opacity = '0.7';
-
-    const usuarioLogado = verificarAutenticacao();
-    if (!usuarioLogado) return;
-
-    try {
-        const usuario = await carregarDadosUsuario(usuarioLogado.id_usuario);
-        if (!usuario) {
-            showNotification('Erro ao carregar dados do usuário', 'danger');
-            return;
-        }
-
-        let cliente = null;
-        if (usuarioLogado.id_cliente) {
-            cliente = await carregarDadosCliente(usuarioLogado.id_cliente);
-        }
-
-        let conta = null;
-        if (usuarioLogado.id_conta) {
-            conta = await carregarDadosConta(usuarioLogado.id_conta);
-        }
-
-        console.log('Dados carregados:', {usuario, cliente, conta});
-
-    } catch (error) {
-        console.error('Erro ao inicializar página:', error);
-        showNotification('Erro ao carregar dados do perfil', 'danger');
-    } finally {
-        document.body.style.opacity = '1';
-    }
-}
-
 function verificarAutenticacao() {
     const usuario = JSON.parse(sessionStorage.getItem('usuario'));
     if (!usuario) {
@@ -74,6 +41,40 @@ async function carregarDadosConta(idConta) {
         throw new Error('Erro ao buscar dados da conta' + errorResponse.message);
     }
     return await response.json();
+}
+
+async function inicializarPagina() {
+    document.body.style.opacity = '0.7';
+
+    const usuarioLogado = verificarAutenticacao();
+    if (!usuarioLogado) return;
+
+    try {
+        const usuario = await carregarDadosUsuario(usuarioLogado.id_usuario);
+        if (!usuario) {
+            showNotification('Erro ao carregar dados do usuário', 'danger');
+            return;
+        }
+
+        let cliente = null;
+        if (usuarioLogado.id_cliente) {
+            cliente = await carregarDadosCliente(usuarioLogado.id_cliente);
+        }
+
+        let conta = null;
+        if (usuarioLogado.id_conta) {
+            conta = await carregarDadosConta(usuarioLogado.id_conta);
+        }
+
+        console.log('Dados carregados:', {usuario, cliente, conta});
+        return conta;
+
+    } catch (error) {
+        console.error('Erro ao inicializar página:', error);
+        showNotification('Erro ao carregar dados do perfil', 'danger');
+    } finally {
+        document.body.style.opacity = '1';
+    }
 }
 
 function logout() {
@@ -192,36 +193,8 @@ async function loadClientInformation() {
 }
 
 async function setAgencyNumber() {
-
-    try {
-        const response = await fetch(`${API_BASE_URL}/conta`, {
-            method: 'GET'
-        })
-
-        if (!response.ok) {
-            let errorMsg = "Erro ao buscar a conta";
-            throw new Error(errorMsg);
-        }
-
-        const data = await response.json();
-
-        let agencyNumber = null;
-        if (Array.isArray(data) && data.length > 0) {
-            agencyNumber = data[0]?.agencia ?? null;
-        } else if (data && typeof data === 'object') {
-            agencyNumber = data.agencia ?? null;
-        }
-
-        if (agencyNumber === null || agencyNumber === undefined) {
-            throw new Error('Agência não encontrada no retorno da API');
-        }
-
-        console.log(agencyNumber);
-        return agencyNumber
-
-    } catch (erro) {
-        throw erro;
-    }
+    const conta = await inicializarPagina();
+    return conta.agencia;
 }
 
 function parseBRLToNumber(brl) {
