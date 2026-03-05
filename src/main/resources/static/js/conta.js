@@ -4,6 +4,8 @@ const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebar = document.querySelector('.sidebar');
 const overlay = document.getElementById('sidebarOverlay');
 
+const usuarioLogado = verificarAutenticacao();
+
 function verificarAutenticacao() {
     const usuario = JSON.parse(sessionStorage.getItem('usuario'));
     if (!usuario) {
@@ -44,34 +46,21 @@ async function carregarDadosConta(idConta) {
 }
 
 async function inicializarPagina() {
+
     document.body.style.opacity = '0.7';
-
-    const usuarioLogado = verificarAutenticacao();
-    if (!usuarioLogado) return;
-
     try {
-        const usuario = await carregarDadosUsuario(usuarioLogado.id_usuario);
-        if (!usuario) {
-            showNotification('Erro ao carregar dados do usuário', 'danger');
+        if (!usuarioLogado) {
             return;
         }
 
-        let cliente = null;
-        if (usuarioLogado.id_cliente) {
-            cliente = await carregarDadosCliente(usuarioLogado.id_cliente);
-        }
+        const usuario = await carregarDadosUsuario(usuarioLogado["id_usuario"]);
+        const cliente = await carregarDadosCliente(usuarioLogado["id_usuario"]);
+        const conta = await carregarDadosConta(usuarioLogado["id_usuario"]);
+        console.log(usuario, cliente, conta);
 
-        let conta = null;
-        if (usuarioLogado.id_conta) {
-            conta = await carregarDadosConta(usuarioLogado.id_conta);
-        }
-
-        console.log('Dados carregados:', {usuario, cliente, conta});
-        return conta;
-
-    } catch (error) {
-        console.error('Erro ao inicializar página:', error);
-        showNotification('Erro ao carregar dados do perfil', 'danger');
+    } catch (erro) {
+        console.error('Erro ao inicializar página:', erro);
+        showNotification('Erro ao carregar dados do usuário', 'danger');
     } finally {
         document.body.style.opacity = '1';
     }
@@ -121,9 +110,6 @@ function closeSidebar() {
     document.body.classList.remove('sidebar-open');
 }
 
-sidebarToggle?.addEventListener('click', toggleSidebar);
-overlay?.addEventListener('click', closeSidebar);
-
 function setupToggleVisibility(toggleId, valueId, hiddenId, iconId) {
     const toggleBtn = document.getElementById(toggleId);
     const valueElement = document.getElementById(valueId);
@@ -154,47 +140,30 @@ function setupToggleVisibility(toggleId, valueId, hiddenId, iconId) {
     }
 }
 
-async function setUserBalance() {
-    const usuario = verificarAutenticacao();
-    if (!usuario) throw new Error('Usuário não autenticado');
-    if (!usuario.id_conta) throw new Error('Conta do usuário não encontrada');
-
-    const conta = await carregarDadosConta(usuario.id_conta);
-    return conta?.saldo ?? 0;
-
-}
-
 async function loadBalanceAndAgencyNumber() {
     const balanceElement = document.getElementById('saldoValue');
     const agencyNumberElement = document.getElementById('agencyNumber');
-    if (!balanceElement) return;
-    if (!agencyNumberElement) return;
+    const conta = await carregarDadosConta(usuarioLogado["id_usuario"]);
+    if (!conta) return;
 
     try {
-        const balance = await setUserBalance();
-        balanceElement.textContent = formatCurrency(balance);
+        balanceElement.textContent = formatCurrency(conta.saldo);
     } catch (error) {
         console.error('Erro ao carregar saldo:', error);
         balanceElement.textContent = 'R$ 0,00';
     }
 
     try {
-        agencyNumberElement.textContent = await setAgencyNumber();
+        agencyNumberElement.textContent = conta["agencia"];
     } catch (error) {
         console.error('Erro ao carregar agência:', error);
         agencyNumberElement.textContent = '000-0';
     }
-
 }
 
 async function loadClientInformation() {
-    const usuario = verificarAutenticacao();
-    document.getElementById('nome').textContent = usuario.nome;
-}
-
-async function setAgencyNumber() {
-    const conta = await inicializarPagina();
-    return conta.agencia;
+    if (!usuarioLogado) return;
+    document.getElementById('nome').textContent = usuarioLogado.nome;
 }
 
 function parseBRLToNumber(brl) {
@@ -203,11 +172,6 @@ function parseBRLToNumber(brl) {
     const normalized = cleaned.replace(/,/g, '.');
     const parsed = parseFloat(normalized);
     return Number.isNaN(parsed) ? 0 : parsed;
-}
-
-function formatNumberToBRLInput(value) {
-    const number = Number(value) || 0;
-    return new Intl.NumberFormat('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2}).format(number);
 }
 
 function applyCPFMask(cpf) {
@@ -234,6 +198,9 @@ function applyCPFCNPJMask(value) {
     }
     return applyCPFMask(value);
 }
+
+sidebarToggle?.addEventListener('click', toggleSidebar);
+overlay?.addEventListener('click', closeSidebar);
 
 window.addEventListener('DOMContentLoaded', () => {
     const addBalanceBtn = document.getElementById('addBalanceBtn');
@@ -275,12 +242,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (addBalanceForm) {
         addBalanceForm.addEventListener('submit', async (ev) => {
             ev.preventDefault();
-            try {
-                const usuario = verificarAutenticacao();
-                if (!usuario) throw new Error('Usuário não autenticado');
-                const id_cliente = usuario.id_cliente;
-                if (!id_cliente) throw new Error('Cliente não vinculado ao usuário');
+            const id_cliente = usuarioLogado.id_cliente;
+            if (!usuarioLogado) throw new Error('Usuário não autenticado');
+            if (!id_cliente) throw new Error('Cliente não vinculado ao usuário');
 
+            try {
                 const rawValue = addBalanceValueInput ? addBalanceValueInput.value : '';
                 const amount = parseBRLToNumber(rawValue);
                 if (!amount || amount <= 0) {
@@ -288,7 +254,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                const payload = {
+                const dados = {
                     id_cliente: id_cliente,
                     saldo: amount
                 };
@@ -296,7 +262,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`${API_BASE_URL}/conta/depositar`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(dados)
                 });
 
                 if (!response.ok) {
@@ -419,39 +385,25 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     async function buscarContaPorChave(chave, tipoChave) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/cliente`);
-            if (!response.ok) throw new Error('Erro ao buscar clientes');
 
-            const clientes = await response.json();
+        const response = await fetch(`${API_BASE_URL}/cliente`);
+        if (!response.ok) throw new Error('Erro ao buscar clientes');
+        const clientes = await response.json();
+
+        try {
             let clienteEncontrado = null;
 
             switch (tipoChave) {
                 case 'CPF':
                     const normalizedKey = (chave || '').toString().replace(/\D/g, '').trim();
-                    const found = clientes.find(c => {
-                        const candidates = [
-                            c?.cpf_cnpj,
-                            c?.cpf,
-                            c?.cpfCnpj,
-                            c?.documento,
-                            c?.usuario?.cpf_cnpj,
-                            c?.usuario?.cpf,
-                            c?.usuario?.cpfCnpj,
-                            c?.usuario?.documento
-                        ];
+                    clienteEncontrado = clientes.find(c => {
+                        const cand = c?.usuario?.cpf_cnpj;
+                        if (!cand) return false;
+                        const normalized = String(cand).replace(/\D/g, '').trim();
+                        return normalized !== '' && normalized === normalizedKey;
+                    }) || null;
 
-                        for (let cand of candidates) {
-                            if (cand === undefined || cand === null) continue;
-                            const raw = cand.toString().trim();
-                            const normalized = raw.replace(/\D/g, '');
-                            if (normalized && normalized === normalizedKey) return true;
-                        }
-                        return false;
-                    });
-
-                    console.log('Cliente encontrado na lista: ', found);
-                    clienteEncontrado = found || null;
+                    console.log('Cliente encontrado na lista: ', clienteEncontrado);
                     break;
                 case 'EMAIL':
                     clienteEncontrado = clientes.find(c => c.email === chave);
@@ -461,34 +413,23 @@ window.addEventListener('DOMContentLoaded', () => {
                     break;
                 case 'CONTA':
                     const contasResponse = await fetch(`${API_BASE_URL}/conta`);
-                    if (!contasResponse.ok) throw new Error('Erro ao buscar contas');
                     const contas = await contasResponse.json();
-                    const conta = contas.find(c => c.numero_conta === chave);
-                    return conta ? conta.id_conta : null;
+                    const conta = contas.find(c => c["numero_conta"] === chave);
+                    return conta ? conta["id_conta"] : null;
             }
 
             if (!clienteEncontrado) return null;
 
             const contasResponse = await fetch(`${API_BASE_URL}/conta`);
-            if (!contasResponse.ok) throw new Error('Erro ao buscar contas');
             const contas = await contasResponse.json();
-            console.log("Lista de contas: ", contas);
-            console.log(clienteEncontrado);
+            const clientId = clienteEncontrado?.id;
 
-            const clientId = clienteEncontrado?.id_cliente
-                ?? clienteEncontrado?.usuario?.id_cliente
-                ?? clienteEncontrado?.usuario?.id_usuario
-                ?? clienteEncontrado?.usuario?.id
-                ?? null;
-
-            console.log("Id do Cliente (resolvido): ", clientId);
 
             const contaCliente = contas.find(c =>
-                String(c.id_cliente ?? c.id_conta ?? c.numero_conta ?? '').trim() === String(clientId ?? '').trim()
+                String(c["id_conta"]).trim() === String(clientId ?? '').trim()
             );
-            console.log("Conta encontrada: ", contaCliente);
 
-            return contaCliente ? contaCliente.id_conta : null;
+            return contaCliente ? contaCliente["id_conta"] : null;
         } catch (error) {
             console.error('Erro ao buscar conta:', error);
             return null;
@@ -502,11 +443,11 @@ window.addEventListener('DOMContentLoaded', () => {
             const submitBtn = document.getElementById('transferSubmit');
             if (submitBtn) submitBtn.disabled = true;
 
-            try {
-                const usuario = verificarAutenticacao();
-                if (!usuario) throw new Error('Usuário não autenticado');
-                if (!usuario.id_conta) throw new Error('Conta não encontrada');
+            const usuario = verificarAutenticacao();
+            if (!usuario) throw new Error('Usuário não autenticado');
+            if (!usuario["id_conta"]) throw new Error('Conta não encontrada');
 
+            try {
                 const keyType = transferKeyTypeSelect ? transferKeyTypeSelect.value : '';
                 const key = transferKeyInput ? transferKeyInput.value.trim() : '';
                 const rawValue = transferValueInput ? transferValueInput.value : '';
@@ -535,7 +476,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                if (contaDestino === usuario.id_conta) {
+                if (contaDestino === usuario["id_conta"]) {
                     showNotification('Você não pode transferir para si mesmo', 'danger');
                     return;
                 }
@@ -543,7 +484,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const payload = {
                     tipo_transacao: 'TRANSFERENCIA',
                     valor: amount,
-                    conta_origem: usuario.id_conta,
+                    conta_origem: usuario["id_conta"],
                     conta_destino: contaDestino
                 };
 
@@ -561,7 +502,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const result = await response.json();
-                if (result && result.id_trasacao) {
+                if (result) {
                     showNotification('Transferência realizada com sucesso!', 'success');
                     if (transferModal) transferModal.hide();
                     await loadBalanceAndAgencyNumber();
@@ -616,9 +557,10 @@ function formatCurrency(value) {
 
 window.addEventListener('DOMContentLoaded', inicializarPagina)
 
-window.addEventListener('DOMContentLoaded', () => {
-    loadBalanceAndAgencyNumber();
-    loadClientInformation();
+window.addEventListener('DOMContentLoaded', async () => {
+    await loadBalanceAndAgencyNumber();
+    await loadClientInformation();
+
 
     const refreshBtn = document.getElementById('refreshSaldo');
     if (refreshBtn) {
